@@ -1,0 +1,37 @@
+{
+ "12": {
+  "data": "2026-11-26T12:00:00+00:00",
+  "tipus": "out",
+  "motiu": "Espart: sindesmosi de turmell (fins a mitjan desembre)",
+  "apps": 8,
+  "fins": "2026-12-15T00:00:00+00:00"
+ },
+ "3": {
+  "data": "2026-11-26T17:03:47+00:00",
+  "tipus": "out",
+  "motiu": "Balde, en el aire tras la goleada en Bakú, con Pedri al mando y Gerard López en foco",
+  "apps": 3,
+  "fins": null
+ },
+ "7": {
+  "data": "2026-11-26T15:31:07+00:00",
+  "tipus": "out",
+  "motiu": "El Barça no recurrirá la sanción de Fermín",
+  "apps": 12,
+  "fins": "2026-12-04T15:31:07+00:00"
+ },
+ "16": {
+  "data": "2026-11-26T11:42:06+00:00",
+  "tipus": "doubt",
+  "motiu": "Optimismo con Rodri y Christensen",
+  "apps": 10,
+  "fins": null
+ },
+ "15": {
+  "data": "2026-11-26T11:42:06+00:00",
+  "tipus": "doubt",
+  "motiu": "Optimismo con Rodri y Christensen",
+  "apps": 7,
+  "fins": null
+ }
+}
