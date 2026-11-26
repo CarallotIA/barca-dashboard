@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>FC Barcelona · Primer equip</title>
 <meta name="description" content="Dashboard no oficial del primer equip del FC Barcelona: resultats, classificació, plantilla, estadístiques, vídeos i notícies en directe.">
 <style>
@@ -562,7 +565,7 @@ const ROL={3:['LI',-2],2:['LI',-2],23:['LD',2],5:['DC',.5],18:['DC',-.5],15:['DC
   11:['EE',-1],14:['EE',-2],17:['EE',-2],10:['ED',2],19:['ED',2],9:['DC9',0],27:['DC9',0],29:['DC9',0]};
 const rolOf=p=>(ROL[p.jersey]||[p.pos,0])[0],sideOf=p=>(ROL[p.jersey]||[0,0])[1];
 const FORM={'4-3-3':{D:4,M:3,F:3},'4-4-2':{D:4,M:4,F:2},'3-4-3':{D:3,M:4,F:3}};
-const YPOS={G:90,D:70,M:46,F:20};
+const YPOS={G:82,D:62,M:41,F:19};
 /* Convocatòria oficial: ESPN publica la llista del rival i del Barça només quan el club la fa pública (~1 dia abans) */
 async function loadCall(){
   S.call=null;
