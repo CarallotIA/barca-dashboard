@@ -1,0 +1,34 @@
+name: Actualitza dades
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: dades
+  cancel-in-progress: false
+jobs:
+  feeds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Recull notícies, vídeos i baixes
+        env:
+          DATA_DIR: ${{ github.workspace }}/data
+        run: python scripts/actualitza_feeds.py
+      - name: Desa a la branca data
+        working-directory: data
+        run: |
+          git config user.name "dades-bot"
+          git config user.email "dades-bot@users.noreply.github.com"
+          git add feeds.json baixes_estat.json
+          if git diff --cached --quiet; then echo "Sense canvis"; else git commit -m "chore(data): refresh $(date -u +%FT%TZ)" && git push; fi

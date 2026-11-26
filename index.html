@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FC Barcelona · Primer equip</title>
+<meta name="description" content="Dashboard no oficial del primer equip del FC Barcelona: resultats, classificació, plantilla, estadístiques, vídeos i notícies en directe.">
+<style>
+:root{
+  --blau:#004D98;--blau2:#1a6fd1;--gran:#A50044;--gran2:#d4125f;--or:#EDBB00;
+  --bg:#050d22;--bg2:#0a1d47;--card:rgba(255,255,255,.055);--card2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12);--txt:#f2f5fb;--mut:#9fb0d0;
+  --win:#34d399;--draw:#f5c84b;--loss:#ff5d73;--r:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;color:var(--txt);
+  background:radial-gradient(1200px 600px at 85% -10%,rgba(165,0,68,.35),transparent 60%),
+             radial-gradient(1000px 600px at -10% 0%,rgba(0,77,152,.55),transparent 60%),
+             linear-gradient(180deg,var(--bg2),var(--bg) 480px) var(--bg);
+  min-height:100vh;line-height:1.4}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+img{display:block}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+
+/* Capçalera */
+header.top{position:sticky;top:0;z-index:30;background:rgba(5,13,34,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+header.top::before{content:"";display:block;height:5px;background:repeating-linear-gradient(90deg,var(--blau) 0 38px,var(--gran) 38px 76px)}
+.bar{display:flex;align-items:center;gap:18px;padding:12px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:50px;height:50px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5))}
+.brand .kick{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--or);font-weight:700}
+.brand h1{font-size:22px;font-weight:800;letter-spacing:.01em;line-height:1.1}
+nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav.tabs button{background:transparent;border:0;padding:9px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--mut);transition:.15s}
+nav.tabs button:hover{color:var(--txt);background:var(--card)}
+nav.tabs button.on{color:#fff;background:linear-gradient(135deg,var(--blau),var(--gran));box-shadow:0 4px 18px rgba(165,0,68,.35)}
+.sync{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--win);box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:pulse 2s infinite}
+.dot.err{background:var(--loss);animation:none}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+.sync button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:12px}
+.sync button:hover{background:var(--card2)}
+
+main{padding:26px 0 60px}
+.view{display:none;animation:fade .3s}.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1.25fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g21{grid-template-columns:2fr 1fr}
+@media(max-width:960px){.g2,.g3,.g21{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;position:relative;overflow:hidden}
+.card h2{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.card h2::before{content:"";width:4px;height:14px;border-radius:2px;background:linear-gradient(var(--blau2),var(--gran2))}
+.sec-title{font-size:26px;font-weight:800;margin-bottom:4px}
+.sec-sub{color:var(--mut);margin-bottom:18px;font-size:14px}
+.empty{color:var(--mut);padding:18px;text-align:center;font-size:14px}
+.err-box{background:rgba(255,93,115,.1);border:1px solid rgba(255,93,115,.4);color:#ffc2cb;padding:12px 16px;border-radius:12px;font-size:13px;margin-bottom:16px;display:none}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:960px){.hero{grid-template-columns:1fr}}
+.next{background:linear-gradient(135deg,rgba(0,77,152,.85),rgba(165,0,68,.8));border:1px solid rgba(255,255,255,.2);padding:26px;border-radius:20px;position:relative;overflow:hidden}
+.next::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 40px,transparent 40px 80px);pointer-events:none}
+.next>*{position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2)}
+.chip.live{background:var(--loss);border-color:transparent;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.65}}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:20px 0 16px;text-align:center}
+.vs .tm{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:700;font-size:15px}
+.vs .tm img{width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+.vs .mid{font-size:13px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:.1em}
+.vs .score{font-size:46px;font-weight:900;letter-spacing:.02em;line-height:1}
+.cd{display:flex;justify-content:center;gap:10px;margin-top:6px}
+.cd div{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:8px 12px;min-width:64px;text-align:center}
+.cd b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.cd small{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.meta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,.85);margin-top:14px}
+.last{display:flex;flex-direction:column;justify-content:space-between}
+.lastscore{display:flex;align-items:center;justify-content:center;gap:16px;margin:14px 0}
+.lastscore img{width:56px;height:56px;object-fit:contain}
+.lastscore .sc{font-size:40px;font-weight:900;font-variant-numeric:tabular-nums}
+.btn{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600;font-size:13px}
+.btn:hover{background:rgba(255,255,255,.16)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--blau2),var(--gran2))}
+.kpi small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.kpi b{display:block;font-size:34px;font-weight:900;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12px;color:var(--mut)}
+.kpi .g{color:var(--or)}
+
+/* Forma */
+.form{display:flex;gap:8px;flex-wrap:wrap}
+.pill{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#06122b}
+.pill.W{background:var(--win)}.pill.D{background:var(--draw)}.pill.L{background:var(--loss)}
+.pill.sm{width:26px;height:26px;font-size:12px}
+
+/* Llistes */
+.row{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.12s}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--card)}
+.row .d{font-size:12px;color:var(--mut);line-height:1.25}
+.row .d b{display:block;color:var(--txt);font-size:13px;text-transform:capitalize}
+.row .m{display:grid;grid-template-columns:1fr 58px 1fr;gap:10px;align-items:center}
+.row .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
+.row .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .t.r{justify-content:flex-end;text-align:right}
+.row .t img{width:26px;height:26px;object-fit:contain;flex:none}
+.row .s{text-align:center;font-weight:800;font-size:16px;background:rgba(0,0,0,.28);border-radius:8px;padding:3px 0;font-variant-numeric:tabular-nums}
+.row .s.nx{font-weight:600;font-size:13px;color:var(--mut)}
+.comp{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.comp.liga{color:#ffd1e0;border-color:rgba(212,18,95,.55);background:rgba(165,0,68,.25)}
+.comp.ucl{color:#cfe3ff;border-color:rgba(26,111,209,.7);background:rgba(0,77,152,.35)}
+.comp.alt{color:#ffe9a3;border-color:rgba(237,187,0,.4);background:rgba(237,187,0,.1)}
+@media(max-width:640px){.row{grid-template-columns:1fr;gap:6px}.row .m{grid-template-columns:1fr 52px 1fr}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.f{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;color:var(--mut)}
+.f:hover{color:var(--txt)}
+.f.on{color:#fff;background:linear-gradient(135deg,var(--blau),var(--gran));border-color:transparent}
+.search{margin-left:auto;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--txt);font:inherit;font-size:13px;min-width:200px}
+.search::placeholder{color:var(--mut)}
+select.search{min-width:0;cursor:pointer}
+select.search option{background:#0a1d47}
+
+/* Taula */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:700;text-align:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:9px 6px;text-align:center;border-bottom:1px solid rgba(255,255,255,.06)}
+th.l,td.l{text-align:left}
+td.tm{display:flex;align-items:center;gap:10px;font-weight:600;white-space:nowrap}
+td.tm img{width:24px;height:24px;object-fit:contain}
+tr.me td{background:linear-gradient(90deg,rgba(0,77,152,.55),rgba(165,0,68,.45));font-weight:800}
+tr.me td:first-child{border-radius:10px 0 0 10px}tr.me td:last-child{border-radius:0 10px 10px 0}
+td.pos{font-weight:800;width:44px;position:relative}
+td.pos i{position:absolute;left:0;top:7px;bottom:7px;width:4px;border-radius:2px}
+td.pts{font-weight:900}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:14px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+/* Plantilla */
+.coach{display:flex;gap:20px;align-items:center;margin-bottom:20px;background:linear-gradient(135deg,rgba(0,77,152,.5),rgba(165,0,68,.4));border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:18px 22px}
+.coach .av{width:92px;height:92px;border-radius:50%;object-fit:cover;object-position:top;border:3px solid var(--or);background:#0a1d47}
+.coach small{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--or);font-weight:700}
+.coach h3{font-size:26px;font-weight:800}
+.coach p{color:rgba(255,255,255,.8);font-size:13px}
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:14px}
+.pl{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;transition:.18s;text-align:left;padding:0;position:relative}
+.pl:hover{transform:translateY(-4px);border-color:rgba(237,187,0,.6);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.ph{position:relative;aspect-ratio:1/1.08;background:linear-gradient(160deg,var(--blau) 0 50%,var(--gran) 50%);overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;object-position:50% 12%;position:relative;z-index:1}
+.ph.nophoto{background:linear-gradient(160deg,#0e3a78 0 50%,#6e0a33 50%)}
+.ph.nophoto::after{content:"";position:absolute;inset:0;z-index:1;opacity:.55;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='36' r='17' fill='white'/><path d='M14 100c0-24 15-38 36-38s36 14 36 38z' fill='white'/></svg>") center 75%/62% no-repeat}
+.num{position:absolute;right:8px;top:2px;z-index:2;font-size:44px;font-weight:900;font-style:italic;color:rgba(255,255,255,.92);text-shadow:0 2px 12px rgba(0,0,0,.55);line-height:1}
+.pi{padding:11px 13px 13px}
+.pi b{display:block;font-size:15px;line-height:1.2}
+.pi span{font-size:12px;color:var(--mut)}
+.pi .st{display:flex;gap:10px;margin-top:8px;font-size:12px;color:var(--txt)}
+.pi .st em{font-style:normal;color:var(--or);font-weight:800}
+.flag{width:16px;height:11px;object-fit:cover;border-radius:2px;display:inline-block;vertical-align:-1px;margin-right:5px}
+.badge-inj{position:absolute;left:8px;top:8px;z-index:3;background:var(--loss);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(2,6,18,.78);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 16px}
+.modal.on{display:flex;animation:fade .2s}
+.mbox{background:linear-gradient(180deg,#0d2250,#08142f);border:1px solid rgba(255,255,255,.18);border-radius:22px;width:min(720px,100%);padding:24px;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.mbox::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;border-radius:22px 22px 0 0;background:repeating-linear-gradient(90deg,var(--blau) 0 28px,var(--gran) 28px 56px)}
+.x{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:18px;line-height:1}
+.x:hover{background:var(--card2)}
+.pm{display:grid;grid-template-columns:220px 1fr;gap:22px}
+@media(max-width:640px){.pm{grid-template-columns:1fr}}
+.pm .ph{border-radius:16px;aspect-ratio:1/1.15}
+.pm h3{font-size:26px;font-weight:800;line-height:1.1;margin-bottom:6px}
+.bio{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:12px 0 16px;font-size:13px}
+.bio div{color:var(--mut)}.bio b{display:block;color:var(--txt);font-size:14px}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sgrid div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.sgrid b{display:block;font-size:22px;font-weight:900;color:var(--or)}
+.sgrid small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.evl{margin:14px 0}
+.ev{display:grid;grid-template-columns:48px 24px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:14px}
+.ev .mn{color:var(--mut);font-variant-numeric:tabular-nums}
+.sb{display:grid;grid-template-columns:60px 1fr 60px;gap:10px;align-items:center;margin:9px 0;font-size:13px}
+.sb .v{font-weight:800;font-variant-numeric:tabular-nums}.sb .v:last-child{text-align:right}
+.sb .c{text-align:center;color:var(--mut);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.bars{display:flex;height:8px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.08)}
+.bars i{display:block}.bars i:first-child{background:linear-gradient(90deg,var(--blau2),var(--blau))}.bars i:last-child{background:var(--gran2)}
+
+/* Gràfics */
+svg.chart{width:100%;height:auto;display:block}
+svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
+.hbar{display:grid;grid-template-columns:140px 1fr 56px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.hbar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.hbar .b{height:12px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden}
+.hbar .b i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--blau2),var(--gran2));transition:width .6s}
+.hbar .v{font-weight:800;text-align:right;color:var(--or)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.split div{background:rgba(0,0,0,.2);border-radius:12px;padding:14px;text-align:center}
+.split b{font-size:26px;font-weight:900;display:block}
+.split small{color:var(--mut);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.split span{display:block;font-size:12px;color:var(--mut);margin-top:4px}
+
+/* Notícies */
+.news{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.nw{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:.18s}
+.nw:hover{transform:translateY(-4px);border-color:rgba(237,187,0,.55)}
+.nw .im{aspect-ratio:16/9;background:linear-gradient(135deg,var(--blau),var(--gran));overflow:hidden}
+.nw .im img{width:100%;height:100%;object-fit:cover}
+.nw .bd{padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.nw .src{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--or);font-weight:700;display:flex;justify-content:space-between}
+.nw .src em{font-style:normal;color:var(--mut);letter-spacing:0;text-transform:none;font-weight:500}
+.nw b{font-size:15px;line-height:1.3}
+.nw p{font-size:13px;color:var(--mut);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nlist a{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;align-items:center}
+.nlist a:last-child{border-bottom:0}
+.nlist .im{aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran))}
+.nlist .im img{width:100%;height:100%;object-fit:cover}
+.noimg{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9);background:repeating-linear-gradient(90deg,rgba(0,77,152,.9) 0 18px,rgba(165,0,68,.9) 18px 36px)}
+.nlist b{font-size:14px;line-height:1.3;display:block}
+.nlist span{font-size:11px;color:var(--mut)}
+.nlist a:hover b{color:var(--or)}
+/* Vídeos */
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.vd{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column;transition:.18s}
+.vd:hover{transform:translateY(-4px);border-color:rgba(237,187,0,.55)}
+.vd .th{position:relative;aspect-ratio:16/9;background:#000;overflow:hidden}
+.vd .th img{width:100%;height:100%;object-fit:cover;opacity:.92}
+.vd .play{position:absolute;inset:0;display:grid;place-items:center}
+.vd .play i{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--blau),var(--gran));display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.5);font-style:normal;font-size:20px;padding-left:4px}
+.vd .tag{position:absolute;left:8px;top:8px;z-index:2;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.65);border-radius:999px;padding:3px 9px}
+.vd .tag.sh{background:var(--gran)}.vd .tag.lv{background:var(--loss)}
+.vd .bd{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px}
+.vd b{font-size:14px;line-height:1.3}
+.vd span{font-size:11px;color:var(--mut)}
+.vframe{aspect-ratio:16/9;width:100%;border:0;border-radius:14px;background:#000;margin-top:14px}
+.vframe.short{aspect-ratio:9/16;max-height:70vh;width:auto;margin-inline:auto;display:block}
+.vlink{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.vlink a{text-decoration:none}
+.rv{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:14px}
+.rv:last-child{border-bottom:0}
+@media(max-width:700px){.rv{grid-template-columns:1fr}}
+.rv .t{display:flex;align-items:center;gap:8px;font-weight:600}
+.rv .t img{width:24px;height:24px;object-fit:contain}
+.rv .b{display:flex;gap:6px;flex-wrap:wrap}
+.rv .b .btn{font-size:12px;padding:6px 11px;text-decoration:none}
+.pitch{position:relative;aspect-ratio:68/100;max-height:720px;margin:0 auto;border-radius:14px;background:repeating-linear-gradient(0deg,#0f6b3a 0 9%,#0d5f34 9% 18%);border:2px solid rgba(255,255,255,.35);overflow:hidden}
+.pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.35)}
+.pitch::after{content:"";position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;border:2px solid rgba(255,255,255,.35);border-radius:50%;transform:translate(-50%,-50%)}
+.pp{position:absolute;transform:translate(-50%,-50%);width:20%;text-align:center;cursor:pointer;z-index:2}
+.pp .cut{position:relative;aspect-ratio:.72;display:flex;align-items:flex-end;justify-content:center}
+.pp .cut img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}
+.pp .cut.nocut{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='36' r='17' fill='white' fill-opacity='.6'/><path d='M14 100c0-24 15-38 36-38s36 14 36 38z' fill='white' fill-opacity='.6'/></svg>") center bottom/80% no-repeat}
+.pp .pn{position:absolute;left:0;top:0;font-size:12px;font-weight:800;background:var(--gran);border-radius:999px;padding:1px 6px;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pp b{display:block;margin-top:4px;font-size:12px;text-shadow:0 1px 4px #000;line-height:1.15}
+.pp small{font-size:10px;color:#e8f0ff;text-shadow:0 1px 3px #000}
+.out{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.out:last-child{border-bottom:0}.out span{color:var(--mut);text-align:right}
+.nx2{display:grid;grid-template-columns:1fr minmax(250px,320px);gap:24px;align-items:center}
+.nxt{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--or);margin-bottom:8px;text-align:center}
+@media(max-width:1100px){.nx2{grid-template-columns:1fr}.nxr{max-width:340px;margin:0 auto;width:100%}}
+.next .pitch{max-height:none}
+footer{border-top:1px solid var(--line);padding:22px 0 40px;color:var(--mut);font-size:12px;line-height:1.7}
+footer b{color:var(--txt)}
+.skel{height:120px;border-radius:14px;background:linear-gradient(90deg,var(--card),var(--card2),var(--card));background-size:200% 100%;animation:sk 1.3s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+@media(max-width:700px){.bar{gap:10px}nav.tabs{margin-left:0;width:100%;overflow-x:auto;flex-wrap:nowrap}.sync{margin-left:auto}.brand h1{font-size:18px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+ <div class="wrap bar">
+  <div class="brand">
+   <img src="https://a.espncdn.com/i/teamlogos/soccer/500/83.png" alt="Escut del FC Barcelona">
+   <div><div class="kick">Primer equip · Temporada 2026-27</div><h1>FC Barcelona</h1></div>
+  </div>
+  <nav class="tabs" id="tabs">
+   <button data-v="resum" class="on">Resum</button>
+   <button data-v="partits">Partits</button>
+   <button data-v="classificacio">Classificació</button>
+   <button data-v="plantilla">Plantilla</button>
+   <button data-v="estadistiques">Estadístiques</button>
+   <button data-v="videos">Vídeos</button>
+   <button data-v="noticies">Notícies</button>
+  </nav>
+  <div class="sync"><span class="dot" id="dot"></span><span id="upd">Carregant…</span><button id="refresh" title="Actualitza ara">↻ Actualitza</button></div>
+ </div>
+</header>
+
+<main class="wrap">
+ <div class="err-box" id="err"></div>
+
+ <!-- RESUM -->
+ <section class="view on" id="v-resum">
+  <div class="hero">
+   <div class="next" id="next"><div class="skel"></div></div>
+   <div class="card last" id="last"><div class="skel"></div></div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="grid g2" style="margin-bottom:18px">
+   <div class="card"><h2>Forma recent · totes les competicions</h2><div class="form" id="form"></div><div style="margin-top:18px" id="goalsMini"></div></div>
+   <div class="card"><h2>Màxims golejadors</h2><div class="filters" id="tfilters" style="margin-bottom:12px"></div><div id="topScorers"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px"><h2>Últims vídeos oficials</h2><div class="vgrid" id="vidMini"></div></div>
+  <div class="grid g2">
+   <div class="card"><h2>Properes cites</h2><div id="upNext"></div></div>
+   <div class="card"><h2>Últimes notícies</h2><div class="nlist" id="newsMini"></div></div>
+  </div>
+ </section>
+
+ <!-- PARTITS -->
+ <section class="view" id="v-partits">
+  <div class="sec-title">Partits</div><div class="sec-sub">Resultats i calendari de totes les competicions. Clica un partit per veure'n el detall.</div>
+  <div class="filters" id="mfilters"></div>
+  <div class="card" id="matchList"></div>
+ </section>
+
+ <!-- CLASSIFICACIÓ -->
+ <section class="view" id="v-classificacio">
+  <div class="sec-title">Classificació</div><div class="sec-sub">Es refresca sola amb cada jornada.</div>
+  <div class="filters" id="sfilters"><button class="f on" data-s="liga">LaLiga</button><button class="f" data-s="ucl">Champions League</button></div>
+  <div class="card tw" id="standings"></div>
+ </section>
+
+ <!-- PLANTILLA -->
+ <section class="view" id="v-plantilla">
+  <div class="sec-title">Plantilla</div><div class="sec-sub">Clica un jugador per veure'n la fitxa i les xifres de la temporada a LaLiga.</div>
+  <div class="coach" id="coach"></div>
+  <div class="filters" id="pfilters">
+   <button class="f on" data-p="all">Tots</button><button class="f" data-p="G">Porters</button><button class="f" data-p="D">Defenses</button><button class="f" data-p="M">Migcampistes</button><button class="f" data-p="F">Davanters</button>
+   <select class="search" id="psort" aria-label="Ordena"><option value="jersey">Ordena: dorsal</option><option value="goals">Ordena: gols</option><option value="assists">Ordena: assistències</option><option value="apps">Ordena: partits</option><option value="age">Ordena: edat</option></select>
+   <input class="search" id="psearch" placeholder="Cerca jugador…" style="margin-left:0">
+  </div>
+  <div class="players" id="players"></div>
+ </section>
+
+ <!-- ESTADÍSTIQUES -->
+ <section class="view" id="v-estadistiques">
+  <div class="sec-title">Estadístiques</div><div class="sec-sub">Calculades en directe a partir dels resultats i de la fitxa de cada jugador.</div>
+  <div class="grid g2" style="margin-bottom:18px">
+   <div class="card"><h2>Gols a favor i en contra · últims 12 partits</h2><div id="goalsChart"></div></div>
+   <div class="card"><h2>Punts acumulats · LaLiga</h2><div id="ptsChart"></div></div>
+  </div>
+  <div class="grid g3" style="margin-bottom:18px">
+   <div class="card"><h2>Gols</h2><div id="barGoals"></div></div>
+   <div class="card"><h2>Assistències</h2><div id="barAssists"></div></div>
+   <div class="card"><h2>Targetes</h2><div id="barCards"></div></div>
+  </div>
+  <div class="grid g2">
+   <div class="card"><h2>A casa i a fora · LaLiga</h2><div id="homeAway"></div></div>
+   <div class="card"><h2>Porteria i xuts</h2><div id="gkShots"></div></div>
+  </div>
+ </section>
+
+ <!-- VÍDEOS -->
+ <section class="view" id="v-videos">
+  <div class="sec-title">Vídeos</div><div class="sec-sub">Resums, gols i contingut del club. Del canal oficial del club i, quan parlen del Barça, de LALIGA EA SPORTS, SPORT, Mundo Deportivo i Jijantes (Gerard Romero).</div>
+  <div class="card" style="margin-bottom:18px"><h2>Resums i gols dels últims partits</h2><div id="recap"></div></div>
+  <div class="filters" id="vfilters"></div>
+  <div class="vgrid" id="vidGrid"></div>
+ </section>
+
+ <!-- NOTÍCIES -->
+ <section class="view" id="v-noticies">
+  <div class="sec-title">Notícies</div><div class="sec-sub">Titulars de Mundo Deportivo, SPORT, ESPN, premsa catalana i altres mitjans. S'obren a la font original; les de SPORT i la premsa passen per Google Notícies.</div>
+  <div class="filters" id="nfilters"></div>
+  <div class="news" id="newsGrid"></div>
+ </section>
+</main>
+
+<footer><div class="wrap">
+ <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
+ <b>Fotos:</b> fcbarcelona.com (pàgina oficial de la plantilla); els jugadors que encara no hi surten mostren una silueta. <b>Vídeos:</b> YouTube (club, LALIGA, SPORT, Mundo Deportivo i Jijantes). Escut, fotos i vídeos són propietat del club i dels seus titulars; prototip de treball intern, no oficial.
+</div></footer>
+
+<div class="modal" id="modal" aria-hidden="true"><div class="mbox" id="mbox"></div></div>
+
+<script>
+/* ======== Configuració ======== */
+const API='https://site.api.espn.com/apis';
+const TEAM='83';
+const RSS_MD='https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://www.mundodeportivo.com/rss/futbol/fc-barcelona.xml');
+/*FCB_START*/const FCB={"coach": {"name": "Hansi Flick", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/01/6181083d-ed6a-4c57-ae51-162701aa520e/00-Hansi_Flick.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/staff/4030694/hansi-flick"}, "players": {"1": {"name": "Joan García", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/76e07caa-8cb7-47bb-8110-f83e5046b65e/01-Joan_Garcia-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/110491/joan-garcia"}, "13": {"name": "Wojciech Szczesny", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/eb96038d-1fc9-4a98-8f40-b81944d057e6/25-Szczesny-RED.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/3543/wojciech-szczesny"}, "25": {"name": "Dominik Livakovic", "img": "https://www.fcbarcelona.com/photo-resources/2026/08/26/364ac22a-cb07-44fb-8a38-4eb9385e0eb7/Livakovic-blau.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/16668/dominik-livakovic"}, "2": {"name": "João Cancelo", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/c8ad7067-9d63-43b7-8657-76a33a5cfc3e/2610_FUT_MASC_Web_Fitxes_Jugadors_Banner_16_9_01_Cancelo_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/5051/joao-pedro-cavaco-cancelo"}, "3": {"name": "Alejandro Balde", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/f8b0225c-2508-431c-baca-b66b97ec6e8e/03-Balde-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/68906/alejandro-balde"}, "5": {"name": "Pau Cubarsí", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/3fd54cdd-21db-4281-9e21-3eeeb31e4046/2610_FUT_MASC_Web_Fitxes_Jugadors_Banner_16_9_01_Cubars-_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/129400/pau-cubarsi"}, "12": {"name": "Xavi Espart", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/7fa75c4a-a8f5-4124-9b77-749eb2f4e035/2610_FUT_MASC_Web_Fitxes_Jugadors_Banner_16_9_01_Xavi_A.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/141001/xavi-espart"}, "15": {"name": "Andreas Christensen", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/7b358e10-138f-4526-8cf8-34a26d6797c8/15-Christensen-RED.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4495/andreas-christensen"}, "18": {"name": "Gerard Martín", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/a37cf202-c22c-416d-87d7-e02cd73e39ad/18-Martin-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/111861/gerard-martin"}, "23": {"name": "Jules Koundé", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/a51ceaf6-fd5e-495d-8217-322e7c319888/23-Kounde-RED.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/15552/jules-kounde"}, "24": {"name": "Eric García", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/b5cf8356-d686-4b7b-bf99-343f7c2a4454/24-Eric_Garcia-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/24635/eric-garcia"}, "4": {"name": "Brian Fariñas", "img": "https://www.fcbarcelona.com/photo-resources/2026/09/03/05fbff19-0b97-49bb-ac8b-92f1c816da51/04-Brian_Farinas-red.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/140515/brian-farinas"}, "6": {"name": "Gavi", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/1691acd3-0765-4dfc-9296-a3320c24240a/06-Gavi-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/116719/pablo-paez-gavira"}, "7": {"name": "Fermín López", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/5be41eac-52db-49a3-8870-fc45fdf89d49/2610_FUT_MASC_Web_Fitxes_Jugadors_Banner_16_9_01_Fermin_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/118929/fermin-lopez"}, "8": {"name": "Pedri", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/182e1d8a-7642-465c-89d1-62e63c8938ae/2610_FUT_MASC_Web_Fitxes_Jugadors_Banner_16_9_01_Pedri_A-1-.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/70486/pedro-gonzalez-lopez"}, "16": {"name": "Rodri", "img": "https://www.fcbarcelona.com/photo-resources/2026/08/18/4ad1a791-ce44-4734-bc29-e8cb8c4cf82e/00-Rodri-grana.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/16286/rodrigo-hernandez-cascante"}, "20": {"name": "Dani Olmo", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/a150d470-f7ea-46d9-9f4d-a6295fef9d8d/20-Olmo-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/16677/dani-olmo"}, "21": {"name": "Frenkie de Jong", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/c6f44c49-1532-4041-bf76-0b80d48c2680/21-De_Jong-RED.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/16291/frenkie-de-jong"}, "22": {"name": "Marc Bernal", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/e026c314-3284-4509-aae8-aac9f929c8e2/22-Bernal-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/141411/marc-bernal"}, "9": {"name": "Gabriel Jesus", "img": "https://www.fcbarcelona.com/photo-resources/2026/09/03/20781c6e-5186-47ce-aa0c-f2d90c4d5085/09-Gabriel_Jesus-red.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/19680/gabriel-fernando-de-jesus"}, "10": {"name": "Lamine Yamal", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/323ae443-f58c-4e3d-bad5-e026d3175e81/10-Lamine-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/129404/lamine-yamal-nasraoui-ebana"}, "11": {"name": "Raphinha", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/52cf522f-f115-4e64-8b22-6979d3687fae/11-Raphinha-RED.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/24156/raphael-dias-belloli"}, "14": {"name": "Karim Adeyemi", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/24/d7f6ac8e-1dd3-4cd5-9a79-6d2b1c3b21c0/00-Adeyemi-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/52163/karim-adeyemi"}, "17": {"name": "Anthony Gordon", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/e22ebbbd-4707-423c-89f6-4ce7bbc34559/00-Gordon-RED.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/23747/anthony-gordon"}, "19": {"name": "Roony Bardghji", "img": "https://www.fcbarcelona.com/photo-resources/2026/07/21/bf80b46d-292c-4dea-b240-e63ad38d17b1/28-Bardghji-BLUE.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/123727/roony-bardghji"}, "27": {"name": "Jesse Bisiwu", "img": "https://www.fcbarcelona.com/photo-resources/2026/08/04/63e8788b-a4e5-4d96-9dcb-718e9ef0f9c6/00-Bisiwu-red.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/136745/jesse-bisiwu"}, "29": {"name": "Hamza Mohamed Abdelkarim Elsayed Selim", "img": "https://www.fcbarcelona.com/photo-resources/2026/09/03/15566d63-53d3-4b35-8077-437adcaa1ed2/29-Hamza-blue.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/572280/hamza-mohamed-abdelkarim-elsayed-selim"}, "31": {"name": "Eder Aller", "img": "https://www.fcbarcelona.com/photo-resources/2026/10/09/51f611f1-67ac-4cf6-b123-53766aee008c/13-Eder-Aller.jpg", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4378979/eder-aller"}, "35": {"name": "Iker Rodríguez", "img": "https://www.fcbarcelona.com/photo-resources/2026/10/09/c600a8ed-8ff7-456e-9b6b-9e67e84dcc9e/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_Rodriguez_A.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4589618/iker-rodriguez"}, "41": {"name": "Álex Campos", "img": "https://www.fcbarcelona.com/photo-resources/2026/10/09/7203d145-0674-4a65-bd31-318d873d3ab4/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_Campos_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4551822/alex-campos"}, "40": {"name": "Guillem Víctor", "img": "https://www.fcbarcelona.com/photo-resources/2026/10/13/2ae002b2-53a2-4efd-9842-f4987f57b9c7/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_G-Victor_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4591766/guillem-victor"}, "33": {"name": "Jordi Pesquer", "img": "https://www.fcbarcelona.com/photo-resources/2026/10/13/10129056-497f-4fd6-b1ca-4b00972434a8/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_Pesquer_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4591779/pesquer"}, "30": {"name": "Ebrima Tunkara", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/7f25f108-471e-4045-bea2-c96c09281d87/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_Tunkara_B.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4586895/ebrima-tunkara"}, "32": {"name": "Orian Goren", "img": "https://www.fcbarcelona.com/photo-resources/2026/11/16/c8e0f6c2-f60d-4b99-aa12-94de60967081/2610_FUT_ATL_Web_Fitxes_Jugadors_Banner_16_9_01_Orian_Goren_A.png", "url": "https://www.fcbarcelona.com/en/football/first-team/players/4591805/orian"}}};/*FCB_END*/
+const fcbImg=j=>{const p=FCB.players?.[j];return p?p.img+'?width=470&height=470':''};
+const POS={G:'Porter',D:'Defensa',M:'Migcampista',F:'Davanter'};
+const POSORD={G:0,D:1,M:2,F:3};
+const TZ='Europe/Madrid';
+const PAIS={Spain:'Espanya',Portugal:'Portugal',Poland:'Polònia',Croatia:'Croàcia',Denmark:'Dinamarca',France:'França',Netherlands:'Països Baixos',Brazil:'Brasil',England:'Anglaterra',Germany:'Alemanya',Sweden:'Suècia',Belgium:'Bèlgica',Israel:'Israel',Egypt:'Egipte',Argentina:'Argentina',Uruguay:'Uruguai'};
+
+/* ======== Utilitats ======== */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+async function getJson(u,t=12000){const c=new AbortController();const id=setTimeout(()=>c.abort(),t);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(id)}}
+const logo=id=>`https://a.espncdn.com/i/teamlogos/soccer/500/${id}.png`;
+const crest=(id,cls='')=>`<img class="${cls}" src="${logo(id)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+const fmtDay=d=>d.toLocaleDateString('ca-ES',{weekday:'short',day:'numeric',month:'short',timeZone:TZ});
+const fmtDayLong=d=>d.toLocaleDateString('ca-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:TZ});
+const fmtTime=d=>d.toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit',timeZone:TZ});
+const ago=d=>{const s=(Date.now()-d.getTime())/1000;if(s<90)return 'ara mateix';if(s<3600)return 'fa '+Math.round(s/60)+' min';if(s<86400)return 'fa '+Math.round(s/3600)+' h';return 'fa '+Math.round(s/86400)+' d'};
+const compName=n=>{n=n||'';if(/LALIGA/i.test(n))return 'LaLiga';if(/Champions/i.test(n))return 'Champions';if(/Gamper/i.test(n))return 'Trofeu Gamper';if(/Friendly/i.test(n))return 'Amistós';if(/Copa del Rey/i.test(n))return 'Copa del Rei';if(/Super/i.test(n))return 'Supercopa';return n};
+const compKey=n=>n==='LaLiga'?'liga':n==='Champions'?'ucl':'alt';
+
+/* ======== Estat ======== */
+const S={roster:[],coachName:'Hansi Flick',all:[],liga:[],ucl:[],team:null,news:[],vids:[],vf:'all',last:{m:0,n:0,v:0},ok:{m:true,n:true},view:'resum',mf:'all',sf:'liga',pf:'all',nf:'all'};
+
+/* ======== Normalització ======== */
+function normEvent(e){
+  const c=e.competitions[0];
+  const me=c.competitors.find(x=>x.team.id===TEAM),op=c.competitors.find(x=>x.team.id!==TEAM);
+  const sc=x=>{const s=x.score;if(s==null)return null;const v=typeof s==='object'?(s.displayValue??s.value):s;const n=parseInt(v,10);return isNaN(n)?null:n};
+  const st=c.status.type,gf=sc(me),ga=sc(op);
+  let res=null;
+  if(st.state==='post'&&gf!=null&&ga!=null){res=gf>ga?'W':gf<ga?'L':(me.winner===true?'W':op.winner===true?'L':'D')}
+  return{id:e.id,date:new Date(e.date),slug:e.league?.slug||'',comp:compName(e.league?.name||e.seasonType?.name),
+    home:me.homeAway==='home',opp:{id:op.team.id,name:op.team.displayName,short:op.team.abbreviation||op.team.displayName.slice(0,3).toUpperCase()},
+    gf,ga,state:st.state,status:st.description,clock:c.status.displayClock,venue:c.venue?.fullName||'',res,pens:/Penalt/i.test(st.description||'')}
+}
+function normStand(d){
+  const es=d?.children?.[0]?.standings?.entries||[];
+  return es.map(en=>{const s={};en.stats.forEach(x=>s[x.name]=x.value);return{id:en.team.id,name:en.team.displayName,s,note:en.note}}).sort((a,b)=>(a.s.rank||99)-(b.s.rank||99));
+}
+function normPlayer(a){
+  const st={};(a.statistics?.splits?.categories||[]).forEach(c=>c.stats.forEach(s=>st[s.name]=Number(s.value)));
+  return{id:a.id,name:a.displayName,jersey:a.jersey?+a.jersey:null,pos:a.position?.abbreviation||'',age:a.age,
+    cm:a.height?Math.round(a.height*2.54):null,kg:a.weight?Math.round(a.weight*0.4536):null,dob:a.dateOfBirth?new Date(a.dateOfBirth):null,
+    country:PAIS[a.citizenship]||a.citizenship||'',flag:a.flag?.href||'',birth:[a.birthPlace?.city,a.birthPlace?.country].filter(Boolean).join(', '),
+    injured:(a.injuries||[]).length>0,st,photo:fcbImg(a.jersey),profile:FCB.players?.[a.jersey]?.url||''};
+}
+
+/* ======== Càrrega de dades ======== */
+async function loadMatches(){
+  const jobs=await Promise.allSettled([
+    getJson(`${API}/site/v2/sports/soccer/all/teams/${TEAM}/schedule`),
+    getJson(`${API}/site/v2/sports/soccer/all/teams/${TEAM}/schedule?fixture=true`),
+    getJson(`${API}/v2/sports/soccer/esp.1/standings`),
+    getJson(`${API}/v2/sports/soccer/uefa.champions/standings`),
+    getJson(`${API}/site/v2/sports/soccer/esp.1/teams/${TEAM}/roster`)
+  ]);
+  const v=i=>jobs[i].status==='fulfilled'?jobs[i].value:null;
+  const evs=new Map();
+  [v(0),v(1)].forEach(d=>(d?.events||[]).forEach(e=>{try{const n=normEvent(e);evs.set(n.id,n)}catch(_){}}));
+  if(evs.size)S.all=[...evs.values()].sort((a,b)=>a.date-b.date);
+  if(v(2))S.liga=normStand(v(2));
+  if(v(3))S.ucl=normStand(v(3));
+  if(v(4)?.athletes?.length)S.roster=v(4).athletes.map(normPlayer);
+  S.ok.m=jobs.some(j=>j.status==='fulfilled');
+  S.last.m=Date.now();
+  await Promise.allSettled([loadCall(),loadUcl()]);
+  renderAll();
+}
+const R2J=u=>'https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(u);
+const GN=(q,l='es')=>R2J('https://news.google.com/rss/search?q='+encodeURIComponent(q)+(l==='ca'?'&hl=ca&gl=ES&ceid=ES:ca':'&hl=es&gl=ES&ceid=ES:es'));
+const TTL=30*60e3;
+/* Cua: les peticions al proxy RSS gratuït s'envien d'una en una (límit de ràfega) */
+let _q=Promise.resolve();const _gap=ms=>new Promise(r=>setTimeout(r,ms));
+const queued=fn=>{const p=_q.then(fn,fn);_q=p.then(()=>_gap(700),()=>_gap(700));return p};
+/* Cache a localStorage: estalvia peticions i serveix dades antigues si la font falla */
+async function cached(url,force){
+  const k='fcbfeed:'+url;let c=null;
+  try{c=JSON.parse(localStorage.getItem(k))}catch(_){}
+  if(!force&&c&&Date.now()-c.t<TTL)return c.d;
+  try{
+    const d=await queued(async()=>{try{return await getJson(url,15000)}catch(e){if(/429/.test(e.message)){await _gap(3000);return await getJson(url,15000)}throw e}});
+    if(d.status&&d.status!=='ok')throw new Error(d.message||'feed');
+    try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(_){}
+    return d;
+  }catch(e){if(c)return c.d;throw e}
+}
+const decode=s=>{const x=document.createElement('textarea');x.innerHTML=String(s||'');return x.value};
+const clean=s=>new DOMParser().parseFromString(String(s||''),'text/html').body.textContent.trim();
+const NEWS_SRC=[
+  {name:'Mundo Deportivo',url:R2J('https://www.mundodeportivo.com/rss/futbol/fc-barcelona.xml'),img:true},
+  {name:'SPORT',url:GN('site:sport.es (Barça OR Flick OR Lamine OR Pedri OR Raphinha OR Gavi) -Euroliga -baloncesto -basket when:3d'),gn:true},
+  {name:'Premsa catalana',url:GN('FC Barcelona Flick OR Lamine OR Pedri when:2d','ca'),gn:true},
+  {name:'Altres mitjans',url:GN('FC Barcelona (Flick OR Lamine OR Pedri) -site:sport.es -site:mundodeportivo.com when:2d'),gn:true}
+];
+/* feeds.js el genera actualitza_feeds.py (notícies i vídeos recopilats sense proxy). Si no hi és o és antic, es fa servir el proxy RSS com a pla B. */
+const DATA_URLS=['https://raw.githubusercontent.com/CarallotIA/barca-dashboard/data/feeds.json','feeds.json','feeds.js'];
+let _feedsP=null,_feedsT=0;
+/* Dades de notícies, vídeos i baixes: les genera una tasca programada de GitHub cada 15 min (branca «data»). */
+function loadFeedsJs(){
+  if(_feedsP&&Date.now()-_feedsT<20e3)return _feedsP;
+  _feedsT=Date.now();
+  return _feedsP=(async()=>{
+    for(const u of DATA_URLS){
+      try{
+        let F;
+        if(u.endsWith('.js')){F=await new Promise(res=>{const s=document.createElement('script');s.src=u+'?t='+Date.now();s.onload=()=>{s.remove();res(window.FEEDS)};s.onerror=()=>{s.remove();res(null)};document.head.appendChild(s)})}
+        else{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store'});if(!r.ok)continue;F=await r.json()}
+        if(F&&F.generated&&Date.now()-new Date(F.generated)<6*3600e3)return F;
+      }catch(_){}
+    }
+    return null;
+  })();
+}
+async function loadNews(force){
+  const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
+  S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
+  const out=[];
+  if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
+  if(e.status==='fulfilled')(e.value.articles||[]).forEach(a=>out.push({srcName:'ESPN',title:a.headline,desc:a.description||'',img:a.images?.[0]?.url||'',url:a.links?.web?.href||'',date:new Date(a.published)}));
+  rs.forEach((r,i)=>{if(r.status!=='fulfilled')return;const s=NEWS_SRC[i];
+    (r.value.items||[]).forEach(it=>{
+      let title=decode(it.title),src=s.name;
+      if(s.gn){const k=title.lastIndexOf(' - ');if(k>10){src=title.slice(k+3).trim()||s.name;title=title.slice(0,k)}}
+      out.push({srcName:src,title,desc:s.gn?'':clean(it.description),img:s.gn?'':(it.thumbnail||it.enclosure?.link||''),url:it.link,date:new Date((it.pubDate||'').replace(' ','T')+'Z')})})});
+  const seen=new Set(),res=[];
+  out.filter(n=>n.title&&safeUrl(n.url)).sort((a,b)=>b.date-a.date).forEach(n=>{const k=norm(n.title).slice(0,40);if(!seen.has(k)){seen.add(k);res.push(n)}});
+  if(res.length)S.news=res;
+  S.ok.n=e.status==='fulfilled'||!!F||rs.some(r=>r.status==='fulfilled');
+  S.last.n=Date.now();
+  renderNews();renderStatus();
+}
+
+const SRC={fcb:'FC Barcelona',laliga:'LALIGA EA SPORTS',sport:'SPORT',md:'Mundo Deportivo',gr:'Jijantes · Gerard Romero'};
+/* Per afegir un canal: copia una línia, posa-hi el seu channel_id (UC…) i, si no és 100% del Barça, filter:true */
+const YT=[
+  {key:'fcb',id:'UC14UlmYlSNiQCBe9Eookf_A'},
+  {key:'laliga',id:'UCTv-XvfzLX3i4IGWAm4sbmA',filter:true},
+  {key:'sport',id:'UC-KNOeH9Cz2Ch3HMujlaTow',filter:true},
+  {key:'md',id:'UCWSZJ4r3s5xk8zICXEveFpg',filter:true},
+  {key:'gr',id:'UC0Cbaofl1u2ZSCUjZ9yy-wg'}
+];
+const ytFeed=id=>R2J('https://www.youtube.com/feeds/videos.xml?channel_id='+id);
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const BARCA_RE=/bar[cç]a|barcelona|culers?|lamine|yamal|pedri|raphinha|gavi|flick|f[eé]rm[ií]n|olmo|koundé|kounde|cubars[ií]|balde|gordon|de jong|rodri\b|laporta|camp nou/i;
+async function loadVideos(force){
+  const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
+  const rs=F?[]:await Promise.allSettled(YT.map(c=>cached(ytFeed(c.id),force)));
+  let all=F?F.videos.map(v=>({...v,date:new Date(v.date),thumb:`https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,url:v.short?`https://www.youtube.com/shorts/${v.id}`:`https://www.youtube.com/watch?v=${v.id}`})):[];
+  rs.forEach((r,i)=>{if(r.status!=='fulfilled')return;const c=YT[i];
+    (r.value.items||[]).forEach(it=>{
+      const m=(it.link||'').match(/(?:v=|shorts\/)([\w-]{11})/);if(!m)return;
+      const title=decode(it.title);if(c.filter&&!BARCA_RE.test(title))return;
+      const short=/\/shorts\//.test(it.link),live=/^\s*🔴|\bLIVE\b|DIRECTE|EN DIRECTO/i.test(title);
+      all.push({id:m[1],title,date:new Date((it.pubDate||'').replace(' ','T')+'Z'),src:c.key,short,live,
+        thumb:`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`,url:short?`https://www.youtube.com/shorts/${m[1]}`:`https://www.youtube.com/watch?v=${m[1]}`})})});
+  if(all.length)S.vids=all.sort((x,y)=>y.date-x.date);
+  S.ok.v=!!F||rs.some(r=>r.status==='fulfilled');
+  S.last.v=Date.now();renderVideos();
+}
+
+/* ======== L'11 suggerit ======== */
+/* Baixes manuals (lesions i sancions que ESPN no informa). Edita'ls aquí. Dorsal: motiu. Actualitzat 26/11/2026 segons les notícies del dia. */
+const BAIXES={
+  3:'Lesió: esquinç de turmell (Balde)',
+  7:'Sancionat (Fermín, 2 partits)',
+  12:'Lesió: sindesmosi de turmell (Espart)',
+  16:'Lesionat, dubtós (Rodri)',
+  15:'Recuperant-se, dubtós (Christensen)'
+};
+/* Rol real al camp (ESPN només diu porter/defensa/migcampista/davanter). side: -2 esquerra … +2 dreta */
+const ROL={3:['LI',-2],2:['LI',-2],23:['LD',2],5:['DC',.5],18:['DC',-.5],15:['DC',-.5],24:['DC',.7],12:['DC',.7],41:['DC',0],40:['DC',0],33:['DC',0],
+  16:['PIV',0],22:['PIV',0],21:['PIV',0],4:['PIV',0],8:['INT',-1],20:['INT',1],6:['INT',-1],7:['INT',1],
+  11:['EE',-1],14:['EE',-2],17:['EE',-2],10:['ED',2],19:['ED',2],9:['DC9',0],27:['DC9',0],29:['DC9',0]};
+const rolOf=p=>(ROL[p.jersey]||[p.pos,0])[0],sideOf=p=>(ROL[p.jersey]||[0,0])[1];
+const FORM={'4-3-3':{D:4,M:3,F:3},'4-4-2':{D:4,M:4,F:2},'3-4-3':{D:3,M:4,F:3}};
+const YPOS={G:90,D:70,M:46,F:20};
+/* Convocatòria oficial: ESPN publica la llista del rival i del Barça només quan el club la fa pública (~1 dia abans) */
+async function loadCall(){
+  S.call=null;
+  const nx=upcoming()[0];if(!nx||!nx.slug)return;
+  try{const d=await getJson(`${API}/site/v2/sports/soccer/${nx.slug}/summary?event=${nx.id}`);
+    const r=(d.rosters||[]).find(x=>x.team?.id===TEAM);
+    if(r?.roster?.length>=11)S.call=new Set(r.roster.map(x=>String(x.jersey)))}catch(_){}
+}
+function minutesEst(p){const a=p.st.appearances||0,s=(p.st.subIns||0),st=Math.max(0,a-s);return st*78+s*22}
+function pickEleven(fm){
+  const nx=upcoming()[0];
+  const info=p=>{const b=(S.bx||BAIXES)[p.jersey];return p.injured?'Lesionat':b?b:S.call&&!S.call.has(String(p.jersey))?'No convocat':''};
+  const ok=S.roster.filter(p=>!info(p)),out=S.roster.filter(p=>info(p)&&minutesEst(p)>0).sort((a,b)=>minutesEst(b)-minutesEst(a));
+  const used=new Set(),mn=(a,b)=>minutesEst(b)-minutesEst(a)||(b.st.appearances||0)-(a.st.appearances||0);
+  const pickRole=(pos,role)=>{const c=ok.filter(p=>p.pos===pos&&!used.has(p.id)&&rolOf(p)===role).sort(mn)[0];if(c)used.add(c.id);return c};
+  const fill=(pos,n,list)=>{const c=ok.filter(p=>p.pos===pos&&!used.has(p.id)).sort(mn);while(list.length<n&&c.length){const p=c.shift();used.add(p.id);list.push(p)}return list};
+  const f=FORM[fm];
+  const gk=fill('G',1,[]);
+  let D=[];
+  if(f.D===4){[pickRole('D','LI'),pickRole('D','LD')].forEach(p=>p&&D.push(p))}
+  D=fill('D',f.D,D);
+  let M=[];
+  const pv=pickRole('M','PIV');if(pv)M.push(pv);
+  M=fill('M',f.M,M);
+  let F=[];
+  F=fill('F',f.F,F);
+  const bySide=l=>l.sort((a,b)=>sideOf(a)-sideOf(b));
+  return{team:[...gk,...bySide(D),...bySide(M),...bySide(F)],out,info,nx};
+}
+function renderOnze(){
+  const el=$('#pitch');if(!el)return;
+  if(!S.roster.length){el.innerHTML='';return}
+  const {team}=pickEleven('4-3-3');
+  const rows={G:team.filter(p=>p.pos==='G'),D:team.filter(p=>p.pos==='D'),M:team.filter(p=>p.pos==='M'),F:team.filter(p=>p.pos==='F')};
+  let h='';
+  Object.entries(rows).forEach(([pos,l])=>l.forEach((p,i)=>{
+    const x=(i+1)*100/(l.length+1);
+    h+=`<div class="pp" style="left:${x}%;top:${YPOS[pos]}%" onclick="openPlayer('${p.id}')"><div class="cut"><img src="fotos/${p.jersey}.webp" alt="${esc(p.name)}" onerror="this.parentNode.classList.add('nocut');this.remove()"><span class="pn">${p.jersey??''}</span></div><b>${esc(p.name.split(' ').slice(-1)[0])}</b></div>`}));
+  el.innerHTML=h;
+}
+
+/* ======== Renders ======== */
+const played=()=>S.all.filter(e=>e.state==='post');
+const upcoming=()=>S.all.filter(e=>e.state!=='post');
+const meRow=()=>S.liga.find(x=>x.id===TEAM);
+
+function renderStatus(){
+  const t=Math.max(S.last.m,S.last.n);
+  $('#upd').textContent=t?`Actualitzat a les ${fmtTime(new Date(t))} · refresc automàtic`+(S.feedsAt?` · notícies i vídeos de les ${fmtTime(S.feedsAt)}`:''):'Carregant…';
+  $('#dot').classList.toggle('err',!(S.ok.m&&S.ok.n));
+  const er=$('#err');
+  if(!S.ok.m||!S.ok.n){er.style.display='block';er.textContent='Alguna font de dades no respon ara mateix. Es tornarà a provar automàticament; es mostren les últimes dades obtingudes.'}else er.style.display='none';
+}
+function renderAll(){renderVideos();renderStatus();renderHero();renderKpis();renderForm();renderTop();renderUp();renderMatches();renderStandings();renderSquad();renderStats();renderNews()}
+
+function renderHero(){
+  const live=S.all.find(e=>e.state==='in');
+  const nx=live||upcoming()[0];
+  const pl=played();const lp=pl[pl.length-1];
+  if(nx){
+    const l=nx.home?[TEAM,nx.opp.id]:[nx.opp.id,TEAM],ln=nx.home?['FC Barcelona',nx.opp.name]:[nx.opp.name,'FC Barcelona'];
+    $('#next').innerHTML=`<div class="nx2"><div class="nxl">
+     <span class="chip ${live?'live':''}">${live?`● En directe · ${esc(nx.clock||'')}`:'Proper partit'}</span> <span class="chip">${esc(nx.comp)}</span>
+     <div class="vs"><div class="tm">${crest(l[0])}${esc(ln[0])}</div>
+      <div>${live?`<div class="score">${nx.home?nx.gf:nx.ga} – ${nx.home?nx.ga:nx.gf}</div>`:`<div class="mid">VS</div>`}</div>
+      <div class="tm">${crest(l[1])}${esc(ln[1])}</div></div>
+     ${live?'':`<div class="cd" id="cd"></div>`}
+     <div class="meta"><span>📅 ${esc(fmtDayLong(nx.date))}</span><span>🕗 ${esc(fmtTime(nx.date))} (hora de Barcelona)</span>${nx.venue?`<span>🏟 ${esc(nx.venue)}</span>`:''}</div></div><div class="nxr"><div class="nxt">Onze suggerit</div><div class="pitch" id="pitch"></div></div></div>`;
+    S.cdTarget=live?null:nx.date;tickCd();renderOnze();
+  }else{$('#next').innerHTML=`<div class="empty">No hi ha cap partit programat.</div>`;S.cdTarget=null}
+  if(lp){
+    const sf=lp.res==='W'?'Victòria':lp.res==='L'?'Derrota':'Empat';
+    $('#last').innerHTML=`<div><h2>Últim resultat</h2><span class="comp ${compKey(lp.comp)}">${esc(lp.comp)}</span> <span class="comp">${esc(fmtDay(lp.date))}</span>
+     <div class="lastscore">${crest(lp.home?TEAM:lp.opp.id)}<div class="sc">${lp.home?lp.gf:lp.ga} – ${lp.home?lp.ga:lp.gf}</div>${crest(lp.home?lp.opp.id:TEAM)}</div>
+     <div style="text-align:center;color:var(--mut);font-size:13px">${lp.home?'FC Barcelona':esc(lp.opp.name)} · ${lp.home?esc(lp.opp.name):'FC Barcelona'}</div></div>
+     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="pill ${lp.res}" style="width:auto;border-radius:999px;padding:0 14px">${sf}</span><button class="btn" onclick="openMatch('${lp.id}')">Veure el detall →</button></div>`;
+  }else $('#last').innerHTML='<div class="empty">Encara no hi ha resultats.</div>';
+}
+function tickCd(){
+  const el=$('#cd');if(!el||!S.cdTarget)return;
+  let s=Math.max(0,Math.floor((S.cdTarget-Date.now())/1000));
+  const d=Math.floor(s/86400);s-=d*86400;const h=Math.floor(s/3600);s-=h*3600;const m=Math.floor(s/60);s-=m*60;
+  el.innerHTML=[['dies',d],['hores',h],['min',m],['seg',s]].map(([k,v])=>`<div><b>${String(v).padStart(2,'0')}</b><small>${k}</small></div>`).join('');
+}
+function renderKpis(){
+  const me=meRow(),u=S.ucl.find(x=>x.id===TEAM),sec=S.liga.find(x=>x.s.rank===2);
+  const k=[];
+  if(me){const s=me.s,gap=sec?s.points-sec.s.points:null;
+    k.push(['LaLiga',`${s.rank}è`,gap==null?'':(s.rank===1?`+${gap} sobre el 2n`:`${s.points-S.liga[0].s.points} del líder`),true]);
+    k.push(['Punts',s.points,`${s.gamesPlayed} partits jugats`]);
+    k.push(['Balanç',`${s.wins}-${s.ties}-${s.losses}`,'victòries · empats · derrotes']);
+    k.push(['Gols',`${s.pointsFor}:${s.pointsAgainst}`,`diferència ${s.pointDifferential>0?'+':''}${s.pointDifferential}`]);
+  }
+  if(u)k.push(['Champions',`${u.s.rank}è`,`${u.s.points} pts · ${u.s.gamesPlayed} partits`,true]);
+  $('#kpis').innerHTML=k.map(([a,b,c,g])=>`<div class="kpi"><small>${a}</small><b class="${g?'g':''}">${b}</b><span>${c}</span></div>`).join('')||'<div class="empty">Sense dades de classificació.</div>';
+}
+function renderForm(){
+  const p=played().slice(-5);
+  $('#form').innerHTML=p.map(e=>`<span class="pill ${e.res}" title="${esc(e.opp.name)} ${e.gf}-${e.ga}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`).join('')||'<span class="empty">–</span>';
+  $('#goalsMini').innerHTML=goalsChart(played().slice(-8),520,170);
+}
+/* Gols a la Champions: es compten dels fets de cada partit (ESPN només dona les estadístiques de jugador de LaLiga). Els partits acabats no canvien, així que es guarden. */
+const UCLG={};
+async function loadUcl(){
+  const ms=S.all.filter(e=>e.state==='post'&&e.slug==='uefa.champions');
+  await Promise.allSettled(ms.filter(m=>!UCLG[m.id]).map(async m=>{
+    const d=await getJson(`${API}/site/v2/sports/soccer/uefa.champions/summary?event=${m.id}`);
+    const g={};(d.keyEvents||[]).forEach(k=>{
+      if(k.team?.id!==TEAM||!k.scoringPlay||/own/i.test(k.type?.text||''))return;
+      const a=k.participants?.[0]?.athlete;if(a)g[a.id]=(g[a.id]||0)+1});
+    UCLG[m.id]=g}));
+  S.uclGoals={};Object.values(UCLG).forEach(g=>Object.entries(g).forEach(([id,n])=>S.uclGoals[id]=(S.uclGoals[id]||0)+n));
+}
+function renderTop(){
+  const mode=S.tm||'total',U=S.uclGoals||{};
+  $('#tfilters').innerHTML=[['total','Total'],['liga','LaLiga'],['ucl','Champions']].map(([k,n])=>`<button class="f ${k===mode?'on':''}" data-tm="${k}">${n}</button>`).join('');
+  const val=p=>mode==='liga'?(p.st.totalGoals||0):mode==='ucl'?(U[p.id]||0):(p.st.totalGoals||0)+(U[p.id]||0);
+  const t=[...S.roster].filter(p=>val(p)>0).sort((a,b)=>val(b)-val(a)||(b.st.goalAssists||0)-(a.st.goalAssists||0)).slice(0,10);
+  $('#topScorers').innerHTML=t.length?t.map(p=>`<div class="hbar" style="grid-template-columns:140px 1fr 30px;cursor:pointer" onclick="openPlayer('${p.id}')"><span class="n">${esc(p.name)}</span><div class="b"><i style="width:${val(p)/val(t[0])*100}%"></i></div><span class="v">${val(p)}</span></div>`).join(''):'<div class="empty">Sense gols.</div>';
+}
+$('#tfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tm=b.dataset.tm;renderTop()});
+function matchRow(e){
+  const l=e.home?['FC Barcelona',e.opp.name]:[e.opp.name,'FC Barcelona'],li=e.home?[TEAM,e.opp.id]:[e.opp.id,TEAM];
+  const mid=e.state==='post'?`${e.home?e.gf:e.ga} - ${e.home?e.ga:e.gf}`:e.state==='in'?`${e.home?e.gf:e.ga}-${e.home?e.ga:e.gf}`:fmtTime(e.date);
+  return`<div class="row" onclick="openMatch('${e.id}')" role="button" tabindex="0">
+    <div class="d"><b>${esc(fmtDay(e.date))}</b>${e.state==='post'||e.state==='in'?fmtTime(e.date):''}</div>
+    <div class="m"><div class="t r"><span>${esc(l[0])}</span>${crest(li[0])}</div><div class="s ${e.state==='pre'?'nx':''}">${esc(mid)}</div><div class="t">${crest(li[1])}<span>${esc(l[1])}</span></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
+}
+function renderUp(){
+  const u=upcoming().slice(0,5);
+  $('#upNext').innerHTML=u.map(matchRow).join('')||'<div class="empty">Cap partit programat.</div>';
+}
+function renderMatches(){
+  const comps=[['all','Tots'],['liga','LaLiga'],['ucl','Champions'],['alt','Amistosos i altres']];
+  $('#mfilters').innerHTML=comps.map(([k,n])=>`<button class="f ${S.mf===k?'on':''}" data-m="${k}">${n}</button>`).join('')+
+    `<button class="f ${S.mfs==='res'?'on':''}" data-ms="res" style="margin-left:auto">Resultats</button><button class="f ${S.mfs==='cal'?'on':''}" data-ms="cal">Calendari</button><button class="f ${!S.mfs?'on':''}" data-ms="">Tot</button>`;
+  let l=S.all.filter(e=>S.mf==='all'||compKey(e.comp)===S.mf);
+  if(S.mfs==='res')l=l.filter(e=>e.state==='post');else if(S.mfs==='cal')l=l.filter(e=>e.state!=='post');
+  const pre=l.filter(e=>e.state!=='post'),post=l.filter(e=>e.state==='post').reverse();
+  const ordered=S.mfs==='res'?post:S.mfs==='cal'?pre:[...pre,...post];
+  $('#matchList').innerHTML=ordered.map(matchRow).join('')||'<div class="empty">No hi ha partits amb aquest filtre.</div>';
+}
+function renderStandings(){
+  const rows=S.sf==='liga'?S.liga:S.ucl;
+  if(!rows.length){$('#standings').innerHTML='<div class="empty">Classificació no disponible ara mateix.</div>';return}
+  const notes=new Map();
+  $('#standings').innerHTML=`<table><thead><tr><th>#</th><th class="l">Equip</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`+
+   rows.map(r=>{const s=r.s;if(r.note)notes.set(r.note.description,r.note.color);
+    return`<tr class="${r.id===TEAM?'me':''}"><td class="pos">${r.note?`<i style="background:${esc(r.note.color)}"></i>`:''}${s.rank}</td><td class="tm l">${crest(r.id)}${esc(r.name)}</td><td>${s.gamesPlayed}</td><td>${s.wins}</td><td>${s.ties}</td><td>${s.losses}</td><td>${s.pointsFor}</td><td>${s.pointsAgainst}</td><td>${s.pointDifferential>0?'+':''}${s.pointDifferential}</td><td class="pts">${s.points}</td></tr>`}).join('')+
+   `</tbody></table><div class="legend">${[...notes].map(([d,c])=>`<span><i style="background:${esc(c)}"></i>${esc(d)}</span>`).join('')}</div>`;
+}
+function renderSquad(){
+  const ph=FCB.coach?.img?FCB.coach.img+'?width=470':'';
+  $('#coach').innerHTML=`${ph?`<img class="av" src="${esc(ph)}" alt="" onerror="this.style.display='none'">`:''}<div><small>Entrenador</small><h3>${esc(FCB.coach?.name||S.coachName)}</h3><p>Primer equip del FC Barcelona · ${S.roster.length} jugadors a la plantilla${FCB.coach?.url?` · <a href="${esc(FCB.coach.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--or)">Fitxa oficial ↗</a>`:''}</p></div>`;
+  let l=S.roster.filter(p=>S.pf==='all'||p.pos===S.pf);
+  const q=($('#psearch').value||'').toLowerCase().trim();
+  if(q)l=l.filter(p=>p.name.toLowerCase().includes(q)||String(p.jersey)===q);
+  const so=$('#psort').value;
+  const key={jersey:p=>p.jersey??999,goals:p=>-(p.st.totalGoals||0),assists:p=>-(p.st.goalAssists||0),apps:p=>-(p.st.appearances||0),age:p=>p.age||99}[so];
+  l.sort((a,b)=>key(a)-key(b));
+  $('#players').innerHTML=l.map(p=>`<button class="pl" onclick="openPlayer('${p.id}')">${p.injured?'<span class="badge-inj">Lesionat</span>':''}${phoHtml(p)}
+    <div class="pi"><b>${esc(p.name)}</b><span>${POS[p.pos]||''} · ${p.age||'?'} anys</span>
+    <div class="st"><span><em>${p.st.totalGoals??0}</em> gols</span><span><em>${p.st.goalAssists??0}</em> ass.</span><span><em>${p.st.appearances??0}</em> PJ</span></div></div></button>`).join('')||'<div class="empty">Cap jugador amb aquest filtre.</div>';
+}
+function phoHtml(p){return`<div class="ph ${p.photo?'':'nophoto'}">${p.photo?`<img src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" onerror="this.parentNode.classList.add('nophoto');this.remove()">`:''}<span class="num">${p.jersey??''}</span></div>`}
+
+/* ======== Gràfics ======== */
+function goalsChart(ms,W=640,H=230){
+  if(!ms.length)return'<div class="empty">Sense partits.</div>';
+  const pl=22,pb=40,pt=18,n=ms.length,mx=Math.max(4,...ms.map(m=>Math.max(m.gf,m.ga))),bw=(W-pl-8)/n,ih=H-pt-pb;
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Gols a favor i en contra per partit">`;
+  for(let g=0;g<=mx;g+=Math.ceil(mx/4)){const y=pt+ih*(1-g/mx);s+=`<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}" stroke="rgba(255,255,255,.08)"/><text x="${pl-6}" y="${y+4}" text-anchor="end">${g}</text>`}
+  ms.forEach((m,i)=>{const x=pl+i*bw+bw*.12,w=bw*.34,h1=ih*m.gf/mx,h2=ih*m.ga/mx;
+    s+=`<g><title>${esc(m.opp.name)} · ${m.gf}-${m.ga} (${esc(m.comp)})</title>
+    <rect x="${x}" y="${pt+ih-h1}" width="${w}" height="${Math.max(h1,1)}" rx="3" fill="#2b7fe0"/><text x="${x+w/2}" y="${pt+ih-h1-4}" text-anchor="middle" style="fill:#fff;font-weight:700">${m.gf}</text>
+    <rect x="${x+w+3}" y="${pt+ih-h2}" width="${w}" height="${Math.max(h2,1)}" rx="3" fill="#d4125f"/><text x="${x+w+3+w/2}" y="${pt+ih-h2-4}" text-anchor="middle" style="fill:#fff;font-weight:700">${m.ga}</text>
+    <image href="${logo(m.opp.id)}" x="${x+w-8}" y="${H-pb+8}" width="22" height="22"/></g>`});
+  return s+`</svg><div class="legend"><span><i style="background:#2b7fe0"></i>Gols a favor</span><span><i style="background:#d4125f"></i>Gols en contra</span></div>`;
+}
+function ptsChart(){
+  const ms=S.all.filter(e=>e.state==='post'&&e.comp==='LaLiga');
+  if(!ms.length)return'<div class="empty">Sense partits de lliga.</div>';
+  let p=0;const pts=ms.map(m=>(p+=m.res==='W'?3:m.res==='D'?1:0));
+  const W=640,H=230,pl=30,pb=26,pt=14,iw=W-pl-10,ih=H-pt-pb,mx=Math.max(3,...pts),
+   X=i=>pl+(pts.length===1?iw/2:iw*i/(pts.length-1)),Y=v=>pt+ih*(1-v/mx);
+  const line=pts.map((v,i)=>`${i?'L':'M'}${X(i)},${Y(v)}`).join(' ');
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Punts acumulats a LaLiga"><defs><linearGradient id="gp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b7fe0" stop-opacity=".5"/><stop offset="1" stop-color="#2b7fe0" stop-opacity="0"/></linearGradient></defs>`;
+  for(let g=0;g<=mx;g+=Math.ceil(mx/5/3)*3){s+=`<line x1="${pl}" x2="${W}" y1="${Y(g)}" y2="${Y(g)}" stroke="rgba(255,255,255,.08)"/><text x="${pl-6}" y="${Y(g)+4}" text-anchor="end">${g}</text>`}
+  s+=`<path d="${line} L${X(pts.length-1)},${Y(0)} L${X(0)},${Y(0)}Z" fill="url(#gp)"/><path d="${line}" fill="none" stroke="#EDBB00" stroke-width="3" stroke-linejoin="round"/>`;
+  pts.forEach((v,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="${ms[i].res==='W'?'#34d399':ms[i].res==='L'?'#ff5d73':'#f5c84b'}" stroke="#06122b" stroke-width="2"><title>J${i+1} · ${esc(ms[i].opp.name)} ${ms[i].gf}-${ms[i].ga} → ${v} pts</title></circle>`});
+  s+=`<text x="${pl}" y="${H-6}">J1</text><text x="${W-10}" y="${H-6}" text-anchor="end">J${pts.length}</text></svg>`;
+  return s;
+}
+function hbars(list,field,empty){
+  const l=list.filter(p=>(p.st[field]||0)>0).sort((a,b)=>b.st[field]-a.st[field]).slice(0,8);
+  if(!l.length)return`<div class="empty">${empty}</div>`;
+  return l.map(p=>`<div class="hbar" style="cursor:pointer" onclick="openPlayer('${p.id}')"><span class="n">${esc(p.name)}</span><div class="b"><i style="width:${p.st[field]/l[0].st[field]*100}%"></i></div><span class="v">${p.st[field]}</span></div>`).join('');
+}
+function renderStats(){
+  $('#goalsChart').innerHTML=goalsChart(played().slice(-12));
+  $('#ptsChart').innerHTML=ptsChart();
+  $('#barGoals').innerHTML=hbars(S.roster,'totalGoals','Sense gols');
+  $('#barAssists').innerHTML=hbars(S.roster,'goalAssists','Sense assistències');
+  const cl=S.roster.map(p=>({p,y:p.st.yellowCards||0,r:p.st.redCards||0})).filter(x=>x.y+x.r>0).sort((a,b)=>(b.y+b.r)-(a.y+a.r)||b.r-a.r).slice(0,8);
+  const cmax=cl[0]?cl[0].y+cl[0].r:1;
+  $('#barCards').innerHTML=cl.length?cl.map(x=>`<div class="hbar" style="cursor:pointer" onclick="openPlayer('${x.p.id}')"><span class="n">${esc(x.p.name)}</span><div class="b" style="display:flex">${x.y?`<i style="width:${x.y/cmax*100}%;background:#f5c84b;border-radius:0"></i>`:''}${x.r?`<i style="width:${x.r/cmax*100}%;background:#ff5d73;border-radius:0"></i>`:''}</div><span class="v" style="white-space:nowrap">${x.y?x.y+'🟨':''}${x.r?' '+x.r+'🟥':''}</span></div>`).join('')+'<div class="legend"><span>Ordenat pel total de targetes</span></div>':'<div class="empty">Sense targetes</div>';
+  const lg=S.all.filter(e=>e.state==='post'&&e.comp==='LaLiga');
+  const ha=h=>{const l=lg.filter(e=>e.home===h);return{w:l.filter(e=>e.res==='W').length,d:l.filter(e=>e.res==='D').length,l:l.filter(e=>e.res==='L').length,f:l.reduce((a,e)=>a+e.gf,0),c:l.reduce((a,e)=>a+e.ga,0)}};
+  const H=ha(true),A=ha(false);
+  $('#homeAway').innerHTML=lg.length?`<div class="split"><div><small>A casa</small><b>${H.w}V ${H.d}E ${H.l}D</b><span>${H.f} gols a favor · ${H.c} en contra</span></div><div><small>A fora</small><b>${A.w}V ${A.d}E ${A.l}D</b><span>${A.f} gols a favor · ${A.c} en contra</span></div></div>`:'<div class="empty">Sense dades.</div>';
+  const sh=S.roster.reduce((a,p)=>({s:a.s+(p.st.totalShots||0),o:a.o+(p.st.shotsOnTarget||0),g:a.g+(p.st.totalGoals||0)}),{s:0,o:0,g:0});
+  const gk=S.roster.filter(p=>p.pos==='G'&&p.st.appearances>0).sort((a,b)=>b.st.appearances-a.st.appearances)[0];
+  $('#gkShots').innerHTML=`<div class="split"><div><small>Xuts de l'equip</small><b>${sh.s}</b><span>${sh.o} a porteria (${sh.s?Math.round(sh.o/sh.s*100):0}%) · ${sh.g} gols</span></div>
+   <div><small>Porter titular</small><b>${gk?esc(gk.name.split(' ').slice(-1)[0]):'–'}</b><span>${gk?`${gk.st.saves||0} aturades · ${gk.st.goalsConceded||0} gols encaixats`:''}</span></div></div>`;
+}
+
+/* ======== Notícies ======== */
+function newsCard(n){
+  return`<a class="nw" href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><div class="im">${n.img&&safeUrl(n.img)?`<img src="${esc(n.img)}" alt="" loading="lazy" onerror="this.remove()">`:`<div class="noimg">${esc(n.srcName)}</div>`}</div>
+   <div class="bd"><div class="src"><span>${esc(n.srcName)}</span><em>${esc(isNaN(n.date)?'':ago(n.date))}</em></div><b>${esc(n.title)}</b>${n.desc?`<p>${esc(n.desc)}</p>`:''}</div></a>`;
+}
+function renderNews(){
+  const all=S.news;
+  const cnt={};all.forEach(n=>cnt[n.srcName]=(cnt[n.srcName]||0)+1);
+  const PRI=['SPORT','Mundo Deportivo','ESPN'];
+  const chips=[...PRI.filter(k=>cnt[k]),...Object.entries(cnt).filter(([k,c])=>c>=3&&!PRI.includes(k)).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([k])=>k)];
+  $('#nfilters').innerHTML=[['all','Totes'],...chips.map(k=>[k,k])].map(([k,n])=>`<button class="f ${S.nf===k?'on':''}" data-n="${esc(k)}">${esc(n)}</button>`).join('');
+  const l=S.nf==='all'?all:all.filter(n=>n.srcName===S.nf);
+  $('#newsGrid').innerHTML=l.map(newsCard).join('')||'<div class="empty">Notícies no disponibles ara mateix.</div>';
+  $('#newsMini').innerHTML=all.slice(0,5).map(n=>`<a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><div class="im">${n.img&&safeUrl(n.img)?`<img src="${esc(n.img)}" alt="" loading="lazy" onerror="this.remove()">`:`<div class="noimg">${esc(n.srcName)}</div>`}</div><div><b>${esc(n.title)}</b><span>${esc(n.srcName)} · ${esc(isNaN(n.date)?'':ago(n.date))}</span></div></a>`).join('')||'<div class="empty">Notícies no disponibles.</div>';
+}
+
+/* ======== Vídeos ======== */
+const ytq=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+const canEmbed=()=>/^https?:$/.test(location.protocol);
+function vidCard(v){
+  const tag=v.live?'<span class="tag lv">Directe</span>':v.short?'<span class="tag sh">Short</span>':'';
+  return`<button class="vd" onclick="openVideo('${v.id}')"><div class="th"><img src="${esc(v.thumb)}" alt="" loading="lazy" onerror="this.remove()">${tag}<div class="play"><i>▶</i></div></div>
+   <div class="bd"><b>${esc(v.title)}</b><span>${esc(SRC[v.src]||'')} · ${esc(isNaN(v.date)?'':ago(v.date))}</span></div></button>`;
+}
+function matchVideos(m){
+  const first=norm(m.opp.name).split(' ')[0];
+  const names=[norm(m.opp.name),first.length>=5&&!/^(real|club|atletico|athletic|rayo|racing|celta|deportivo|manchester)$/.test(first)?first:''].filter(x=>x.length>3);
+  return S.vids.filter(v=>Math.abs(v.date-m.date)<4*864e5&&names.some(n=>norm(v.title).includes(n)));
+}
+function matchQuery(m){
+  const d=m.date.toLocaleDateString('ca-ES',{day:'numeric',month:'short',timeZone:TZ}).replace('.','');
+  return`FC Barcelona ${m.opp.name} ${d} ${m.date.getFullYear()}`;
+}
+function renderVideos(){
+  const present=Object.keys(SRC).filter(k=>S.vids.some(v=>v.src===k));
+  $('#vfilters').innerHTML=[['all','Tots'],['long','Partits i resums'],['short','Shorts'],...present.map(k=>[k,SRC[k]])].map(([k,n])=>`<button class="f ${S.vf===k?'on':''}" data-vf="${k}">${esc(n)}</button>`).join('');
+  const f=S.vf,l=S.vids.filter(v=>f==='all'||(f==='short'&&v.short)||(f==='long'&&!v.short)||f===v.src);
+  $('#vidGrid').innerHTML=l.map(vidCard).join('')||'<div class="empty">Vídeos no disponibles ara mateix.</div>';
+  const mini=S.vids.filter(v=>!v.short).slice(0,4);
+  $('#vidMini').innerHTML=(mini.length?mini:S.vids.slice(0,4)).map(vidCard).join('')||'<div class="empty">Vídeos no disponibles ara mateix.</div>';
+  const pl=played().slice(-6).reverse();
+  $('#recap').innerHTML=pl.map(m=>{
+    const mv=matchVideos(m),d=m.date.toLocaleDateString('ca-ES',{day:'numeric',month:'short',timeZone:TZ}),q=matchQuery(m);
+    return`<div class="rv"><div class="t"><span class="pill sm ${m.res}">${m.res==='W'?'V':m.res==='L'?'D':'E'}</span>${crest(m.opp.id)}<span>${m.home?'Barça':esc(m.opp.name)} ${m.home?m.gf:m.ga}-${m.home?m.ga:m.gf} ${m.home?esc(m.opp.name):'Barça'} <span style="color:var(--mut);font-weight:400;font-size:12px">· ${esc(m.comp)} · ${esc(d)}</span></span></div>
+     <div class="b">${mv.map(v=>`<button class="btn" onclick="openVideo('${v.id}')">▶ ${esc(v.title.length>34?v.title.slice(0,34)+'…':v.title)}</button>`).join('')}
+     <a class="btn" href="${ytq(q+' highlights resum')}" target="_blank" rel="noopener noreferrer">▶ Resum</a>
+     <a class="btn" href="${ytq(q+' goals gols')}" target="_blank" rel="noopener noreferrer">⚽ Gols</a></div></div>`}).join('')||'<div class="empty">Encara no hi ha partits jugats.</div>';
+}
+function openVideo(id){
+  const v=S.vids.find(x=>x.id===id);if(!v)return;
+  openModal(`<div style="padding-top:6px"><span class="comp ${v.src==='laliga'?'ucl':'liga'}">${esc(SRC[v.src]||'')}</span> <span class="comp">${esc(isNaN(v.date)?'':ago(v.date))}</span>
+   <h3 style="font-size:20px;margin:12px 36px 0 0;line-height:1.25">${esc(v.title)}</h3>
+   ${canEmbed()?`<iframe class="vframe ${v.short?'short':''}" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`:
+   `<a href="${esc(v.url)}" target="_blank" rel="noopener noreferrer" style="display:block;position:relative;margin-top:14px"><img src="${esc(v.thumb)}" alt="" style="width:100%;border-radius:14px"><span style="position:absolute;inset:0;display:grid;place-items:center"><span class="btn" style="font-size:15px;padding:12px 20px">▶ Veure a YouTube ↗</span></span></a>`}
+   <div class="vlink"><a class="btn" href="${esc(v.url)}" target="_blank" rel="noopener noreferrer">Obre a YouTube ↗</a></div></div>`);
+}
+
+/* ======== Modals ======== */
+function openModal(html){$('#mbox').innerHTML=`<button class="x" onclick="closeModal()" aria-label="Tanca">×</button>`+html;$('#modal').classList.add('on');$('#modal').setAttribute('aria-hidden','false')}
+function closeModal(){$('#mbox').innerHTML='';$('#modal').classList.remove('on');$('#modal').setAttribute('aria-hidden','true')}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+function openPlayer(id){
+  const p=S.roster.find(x=>x.id===id);if(!p)return;const s=p.st;
+  const cells=p.pos==='G'?[['Partits',s.appearances],['Aturades',s.saves],['Gols encaixats',s.goalsConceded],['Xuts rebuts',s.shotsFaced]]:
+   [['Partits',s.appearances],['Gols',s.totalGoals],['Assistències',s.goalAssists],['Xuts',s.totalShots],['A porteria',s.shotsOnTarget],['Grogues',s.yellowCards],['Vermelles',s.redCards],['Faltes rebudes',s.foulsSuffered]];
+  openModal(`<div class="pm">${phoHtml(p)}<div><small style="color:var(--or);letter-spacing:.2em;font-weight:700;text-transform:uppercase;font-size:11px">${POS[p.pos]||''} · #${p.jersey??'–'}</small>
+   <h3>${esc(p.name)}</h3>
+   <div class="bio"><div>Nacionalitat<b>${p.flag?`<img class="flag" src="${esc(p.flag)}" alt="">`:''}${esc(p.country)}</b></div><div>Edat<b>${p.age??'–'} anys</b></div>
+   <div>Alçada<b>${p.cm?p.cm+' cm':'–'}</b></div><div>Pes<b>${p.kg?p.kg+' kg':'–'}</b></div>
+   <div>Naixement<b>${p.dob?esc(p.dob.toLocaleDateString('ca-ES',{day:'numeric',month:'long',year:'numeric'})):'–'}</b></div><div>Lloc<b>${esc(p.birth||'–')}</b></div></div>
+   <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:8px">Temporada a LaLiga</div>
+   <div class="sgrid">${cells.map(([k,v])=>`<div><b>${v??0}</b><small>${k}</small></div>`).join('')}</div>${p.profile?`<p style="margin-top:14px"><a class="btn" style="text-decoration:none;display:inline-block" href="${esc(p.profile)}" target="_blank" rel="noopener noreferrer">Fitxa oficial a fcbarcelona.com ↗</a></p>`:''}</div></div>`);
+}
+
+function vidBlock(m){
+  if(m.state==='pre')return'';
+  const q=matchQuery(m),mv=matchVideos(m);
+  return`<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:18px 0 8px">Vídeos del partit</div>
+   ${mv.length?`<div class="vgrid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${mv.map(vidCard).join('')}</div>`:''}
+   <div class="vlink"><a class="btn" href="${ytq(q+' highlights resum')}" target="_blank" rel="noopener noreferrer">▶ Resum a YouTube</a><a class="btn" href="${ytq(q+' goals gols')}" target="_blank" rel="noopener noreferrer">⚽ Gols a YouTube</a>${m.comp==='LaLiga'?`<a class="btn" href="${ytq('LALIGA EA SPORTS resumen Barcelona '+m.opp.name+' '+m.date.getFullYear())}" target="_blank" rel="noopener noreferrer">Resum LALIGA ↗</a>`:''}</div>`;
+}
+async function openMatch(id){
+  const m=S.all.find(e=>e.id===id);if(!m)return;
+  const head=`<div style="text-align:center;padding-top:6px"><span class="comp ${compKey(m.comp)}">${esc(m.comp)}</span> <span class="comp">${esc(fmtDayLong(m.date))} · ${esc(fmtTime(m.date))}</span>
+   <div class="vs" style="margin:16px 0 8px"><div class="tm">${crest(m.home?TEAM:m.opp.id)}${m.home?'FC Barcelona':esc(m.opp.name)}</div>
+   <div class="score">${m.state==='pre'?'VS':`${m.home?m.gf:m.ga} – ${m.home?m.ga:m.gf}`}</div>
+   <div class="tm">${crest(m.home?m.opp.id:TEAM)}${m.home?esc(m.opp.name):'FC Barcelona'}</div></div>
+   <div style="color:var(--mut);font-size:13px">${esc(m.venue)}${m.pens?' · Decidit als penals':''}</div></div>`;
+  openModal(head+`<div id="mdet" class="evl"><div class="skel" style="height:80px;margin-top:16px"></div></div>`);
+  if(m.state==='pre'||!m.slug){$('#mdet').innerHTML=m.state==='pre'?'<div class="empty">Encara no hi ha detall d\'aquest partit.</div>':vidBlock(m);return}
+  try{
+    const d=await getJson(`${API}/site/v2/sports/soccer/${m.slug}/summary?event=${id}`);
+    const ev=(d.keyEvents||[]).filter(k=>/Goal|Penalty - Scored|Own Goal|Yellow Card|Red Card|Penalty - Missed/i.test(k.type?.text||'')&&!/Start|End|Half/i.test(k.type?.text||''));
+    const ico=t=>/Yellow/i.test(t)?'🟨':/Red/i.test(t)?'🟥':/Missed/i.test(t)?'❌':'⚽';
+    let h='';
+    if(ev.length)h+=`<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:18px 0 6px">Fets del partit</div>`+ev.map(k=>{
+      const nm=k.participants?.[0]?.athlete?.displayName||'';const mine=k.team?.id===TEAM;
+      return`<div class="ev"><span class="mn">${esc(k.clock?.displayValue||'')}</span><span>${ico(k.type.text)}</span><span style="${mine?'color:#fff;font-weight:700':''}">${esc(nm)} <span style="color:var(--mut);font-weight:400;font-size:12px">${esc(k.team?.displayName||'')}${/Missed/i.test(k.type.text)?' · penal fallat':''}</span></span></div>`}).join('');
+    const tm=d.boxscore?.teams||[];const a=tm.find(t=>t.team.id===TEAM),b=tm.find(t=>t.team.id!==TEAM);
+    if(a&&b){
+      const gv=(t,n)=>parseFloat(t.statistics.find(s=>s.name===n)?.displayValue||0);
+      const defs=[['Possessió %','possessionPct'],['Xuts','totalShots'],['Xuts a porteria','shotsOnTarget'],['Córners','wonCorners'],['Faltes','foulsCommitted'],['Passades','totalPasses']];
+      h+=`<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:20px 0 4px">Estadístiques (FC Barcelona · rival)</div>`+defs.map(([k,n])=>{const x=gv(a,n),y=gv(b,n),t=(x+y)||1;
+        return`<div class="sb"><span class="v">${x}</span><div><div class="c">${k}</div><div class="bars"><i style="width:${x/t*100}%"></i><i style="width:${y/t*100}%"></i></div></div><span class="v">${y}</span></div>`}).join('');
+    }
+    h=vidBlock(m)+h;
+    $('#mdet').innerHTML=h||'<div class="empty">Detall no disponible per a aquest partit.</div>';
+  }catch(e){$('#mdet').innerHTML='<div class="empty">No s\'ha pogut carregar el detall ara mateix.</div>'}
+}
+
+/* ======== Navegació i filtres ======== */
+function show(v){
+  S.view=v;$$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);
+  window.scrollTo({top:0});
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.v)});
+$('#mfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if('m'in b.dataset)S.mf=b.dataset.m;if('ms'in b.dataset)S.mfs=b.dataset.ms;renderMatches()});
+$('#sfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.sf=b.dataset.s;$$('#sfilters .f').forEach(x=>x.classList.toggle('on',x===b));renderStandings()});
+$('#pfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.pf=b.dataset.p;$$('#pfilters .f').forEach(x=>x.classList.toggle('on',x===b));renderSquad()});
+$('#psort').addEventListener('change',renderSquad);$('#psearch').addEventListener('input',renderSquad);
+$('#nfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.nf=b.dataset.n;renderNews()});
+$('#refresh').addEventListener('click',()=>{loadMatches();loadNews(true);loadVideos(true)});
+$('#vfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.vf=b.dataset.vf;renderVideos()});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('row')){e.preventDefault();e.target.click()}});
+
+/* ======== Refresc automàtic ======== */
+setInterval(tickCd,1000);
+setInterval(()=>{
+  const now=Date.now(),live=S.all.some(e=>e.state==='in');
+  const near=S.all.some(e=>e.state==='pre'&&Math.abs(e.date-now)<3*3600e3);
+  if(now-S.last.m>(live?30e3:near?120e3:300e3))loadMatches();
+  const FT=S.feedsMode?5*60e3:TTL;
+  if(now-S.last.n>FT)loadNews();
+  if(now-S.last.v>FT)loadVideos();
+  renderStatus();
+},15000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-S.last.m>60e3){loadMatches();loadNews();loadVideos()}});
+
+const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','noticies'].includes(h))show(h);
+loadMatches();loadNews();loadVideos();
+</script>
+</body>
+</html>
