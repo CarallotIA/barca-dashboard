@@ -140,7 +140,7 @@ def main():
         print("  (baixes no disponibles:", ex, ")")
         bx = None
     data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx}
-    OUT.write_text("window.FEEDS=" + json.dumps(data, ensure_ascii=False) + ";\n", encoding="utf-8")
+    OUT.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"OK: {len(n)} notícies i {len(v)} vídeos a {OUT.name}")
 
 

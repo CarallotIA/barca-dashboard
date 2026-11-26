@@ -492,7 +492,7 @@ function loadFeedsJs(){
       try{
         let F;
         if(u.endsWith('.js')){F=await new Promise(res=>{const s=document.createElement('script');s.src=u+'?t='+Date.now();s.onload=()=>{s.remove();res(window.FEEDS)};s.onerror=()=>{s.remove();res(null)};document.head.appendChild(s)})}
-        else{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store'});if(!r.ok)continue;F=await r.json()}
+        else{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store'});if(!r.ok)continue;F=JSON.parse((await r.text()).replace(/^\s*window\.FEEDS\s*=\s*/,'').replace(/;\s*$/,''))}
         if(F&&F.generated&&Date.now()-new Date(F.generated)<6*3600e3)return F;
       }catch(_){}
     }
