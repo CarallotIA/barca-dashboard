@@ -125,6 +125,63 @@ def videos():
     return out
 
 
+FOTMOB = "https://www.fotmob.com/api/data/"
+PS_FILE = DATA / "pstats.json"
+PS_MAX_AGE = 6 * 3600  # les estadístiques de temporada canvien poc: es refresquen cada 6 h
+
+
+def _json(url):
+    return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30).read())
+
+
+def _num(x):
+    try:
+        return float(str(x).replace(",", "."))
+    except Exception:
+        return None
+
+
+def pstats():
+    """Regats i % de passades de cada jugador (FotMob, temporada de LaLiga). Retorna {dorsal: {...}}."""
+    old = {}
+    if PS_FILE.exists():
+        try:
+            old = json.loads(PS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            old = {}
+    if old.get("generated") and (datetime.now(timezone.utc) - datetime.fromisoformat(old["generated"].replace("Z", "+00:00"))).total_seconds() < PS_MAX_AGE:
+        print("  (estadístiques de jugador recents: es reutilitzen)")
+        return old.get("players", {})
+    out = {}
+    try:
+        team = _json(FOTMOB + "teams?id=8634&ccode3=ESP")
+        members = [m for g in team["squad"]["squad"] if g.get("title") != "coach" for m in g["members"]]
+        for m in members:
+            try:
+                j = _json(FOTMOB + f"playerData?id={m['id']}")
+                items = {}
+                for sec in (j.get("firstSeasonStats") or {}).get("statsSection", {}).get("items", []):
+                    for it in sec.get("items", []):
+                        items[it["title"]] = it.get("statValue")
+                d = {
+                    "dr": _num(items.get("Dribbles")),
+                    "drp": _num(items.get("Dribbles success rate")),
+                    "pa": _num(items.get("Accurate passes")),
+                    "pp": _num(items.get("Pass accuracy")),
+                }
+                if any(v is not None for v in d.values()):
+                    out[str(m["shirtNumber"])] = {"name": m["name"], **d}
+            except Exception as ex:
+                print(f"  ✗ {m.get('name')}: {ex}")
+        print(f"  ✓ {len(out)} jugadors")
+    except Exception as ex:
+        print("  ✗ FotMob:", ex)
+        return old.get("players", {})
+    if out:
+        PS_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "players": out}, ensure_ascii=False), encoding="utf-8")
+    return out or old.get("players", {})
+
+
 def main():
     print("Notícies:")
     n = news()
@@ -139,7 +196,9 @@ def main():
     except Exception as ex:
         print("  (baixes no disponibles:", ex, ")")
         bx = None
-    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx}
+    print("Estadístiques de jugador (FotMob):")
+    ps = pstats()
+    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps}
     OUT.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"OK: {len(n)} notícies i {len(v)} vídeos a {OUT.name}")
 

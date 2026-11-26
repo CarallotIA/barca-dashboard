@@ -355,6 +355,10 @@ footer b{color:var(--txt)}
    <div class="card"><h2>Assistències</h2><div id="barAssists"></div></div>
    <div class="card"><h2>Targetes</h2><div id="barCards"></div></div>
   </div>
+  <div class="grid g2" style="margin-bottom:18px">
+   <div class="card"><h2>Regats completats</h2><div id="barDrib"></div></div>
+   <div class="card"><h2>% de passades completades</h2><div id="barPass"></div></div>
+  </div>
   <div class="grid g2">
    <div class="card"><h2>A casa i a fora · LaLiga</h2><div id="homeAway"></div></div>
    <div class="card"><h2>Porteria i xuts</h2><div id="gkShots"></div></div>
@@ -506,7 +510,7 @@ function loadFeedsJs(){
 }
 async function loadNews(force){
   const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
-  S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  S.ps=F&&F.pstats?F.pstats:null;if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
   const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
   const out=[];
   if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
@@ -771,7 +775,21 @@ function hbars(list,field,empty){
   if(!l.length)return`<div class="empty">${empty}</div>`;
   return l.map(p=>`<div class="hbar" style="cursor:pointer" onclick="openPlayer('${p.id}')"><span class="n">${esc(p.name)}</span><div class="b"><i style="width:${p.st[field]/l[0].st[field]*100}%"></i></div><span class="v">${p.st[field]}</span></div>`).join('');
 }
+function psBars(kind){
+  const P=S.ps||{};
+  const rows=S.roster.map(p=>({p,d:P[p.jersey]})).filter(x=>x.d&&x.p.pos!=='G');
+  if(!rows.length)return'<div class="empty">Dades de FotMob no disponibles ara mateix.</div>';
+  let l;
+  if(kind==='dr')l=rows.filter(x=>x.d.dr>0).sort((a,b)=>b.d.dr-a.d.dr).slice(0,8);
+  else l=rows.filter(x=>x.d.pa>=150&&x.d.pp!=null).sort((a,b)=>b.d.pp-a.d.pp).slice(0,8);
+  if(!l.length)return'<div class="empty">Sense dades.</div>';
+  const mx=kind==='dr'?l[0].d.dr:100;
+  return l.map(x=>{const v=kind==='dr'?x.d.dr:x.d.pp,sub=kind==='dr'?(x.d.drp!=null?x.d.drp+'%':''):x.d.pa+' compl.';
+    return`<div class="hbar" style="cursor:pointer;grid-template-columns:140px 1fr 78px" onclick="openPlayer('${x.p.id}')"><span class="n">${esc(x.p.name)}</span><div class="b"><i style="width:${v/mx*100}%"></i></div><span class="v" style="white-space:nowrap">${kind==='dr'?v+' <small style="color:var(--mut);font-weight:500">('+sub+')</small>':v+'%'}</span></div>`}).join('')
+   +`<div class="legend"><span>${kind==='dr'?'Entre parèntesis, % d\'èxit. ':'Només jugadors amb ≥150 passades completades ('+'sense porters). '}Temporada de LaLiga · FotMob</span></div>`;
+}
 function renderStats(){
+  $('#barDrib').innerHTML=psBars('dr');$('#barPass').innerHTML=psBars('pp');
   $('#goalsChart').innerHTML=goalsChart(played().slice(-12));
   $('#ptsChart').innerHTML=ptsChart();
   $('#barGoals').innerHTML=hbars(S.roster,'totalGoals','Sense gols');
@@ -856,6 +874,16 @@ function openPlayer(id){
   const p=S.roster.find(x=>x.id===id);if(!p)return;const s=p.st;
   const cells=p.pos==='G'?[['Partits',s.appearances],['Aturades',s.saves],['Gols encaixats',s.goalsConceded],['Xuts rebuts',s.shotsFaced]]:
    [['Partits',s.appearances],['Gols',s.totalGoals],['Assistències',s.goalAssists],['Xuts',s.totalShots],['A porteria',s.shotsOnTarget],['Grogues',s.yellowCards],['Vermelles',s.redCards],['Faltes rebudes',s.foulsSuffered]];
+  const ps=(S.ps||{})[p.jersey];
+  if(ps){
+    if(p.pos==='G'){if(ps.pp!=null)cells.push(['% passades',ps.pp+'%'])}
+    else{
+      if(ps.dr!=null)cells.push(['Regats',ps.dr]);
+      if(ps.drp!=null)cells.push(['% regats',ps.drp+'%']);
+      if(ps.pa!=null)cells.push(['Passades',ps.pa]);
+      if(ps.pp!=null)cells.push(['% passades',ps.pp+'%']);
+    }
+  }
   openModal(`<div class="pm">${phoHtml(p)}<div><small style="color:var(--or);letter-spacing:.2em;font-weight:700;text-transform:uppercase;font-size:11px">${POS[p.pos]||''} · #${p.jersey??'–'}</small>
    <h3>${esc(p.name)}</h3>
    <div class="bio"><div>Nacionalitat<b>${p.flag?`<img class="flag" src="${esc(p.flag)}" alt="">`:''}${esc(p.country)}</b></div><div>Edat<b>${p.age??'–'} anys</b></div>
