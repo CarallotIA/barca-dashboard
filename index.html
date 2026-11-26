@@ -87,7 +87,9 @@ main{padding:26px 0 60px}
 .btn:hover{background:rgba(255,255,255,.16)}
 
 /* KPI */
-.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpis-t{grid-column:1/-1;font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:800;color:var(--or);margin-top:4px}
+.kpis-t:first-child{margin-top:0}
 @media(max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden}
 .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--blau2),var(--gran2))}
@@ -652,15 +654,19 @@ function tickCd(){
 }
 function renderKpis(){
   const me=meRow(),u=S.ucl.find(x=>x.id===TEAM),sec=S.liga.find(x=>x.s.rank===2);
-  const k=[];
-  if(me){const s=me.s,gap=sec?s.points-sec.s.points:null;
-    k.push(['LaLiga',`${s.rank}è`,gap==null?'':(s.rank===1?`+${gap} sobre el 2n`:`${s.points-S.liga[0].s.points} del líder`),true]);
-    k.push(['Punts',s.points,`${s.gamesPlayed} partits jugats`]);
-    k.push(['Balanç',`${s.wins}-${s.ties}-${s.losses}`,'victòries · empats · derrotes']);
-    k.push(['Gols',`${s.pointsFor}:${s.pointsAgainst}`,`diferència ${s.pointDifferential>0?'+':''}${s.pointDifferential}`]);
-  }
-  if(u)k.push(['Champions',`${u.s.rank}è`,`${u.s.points} pts · ${u.s.gamesPlayed} partits`,true]);
-  $('#kpis').innerHTML=k.map(([a,b,c,g])=>`<div class="kpi"><small>${a}</small><b class="${g?'g':''}">${b}</b><span>${c}</span></div>`).join('')||'<div class="empty">Sense dades de classificació.</div>';
+  const rowOf=(name,r,rows,extra)=>{
+    if(!r)return'';const s=r.s,gap=extra;
+    return`<div class="kpis-t">${name}</div>`+[
+      ['Classificació',`${s.rank}è`,gap,true],
+      ['Punts',s.points,`${s.gamesPlayed} partits jugats`],
+      ['Balanç',`${s.wins}-${s.ties}-${s.losses}`,'victòries · empats · derrotes'],
+      ['Gols',`${s.pointsFor}:${s.pointsAgainst}`,`diferència ${s.pointDifferential>0?'+':''}${s.pointDifferential}`]
+    ].map(([a,b,c,g])=>`<div class="kpi"><small>${a}</small><b class="${g?'g':''}">${b}</b><span>${c}</span></div>`).join('')};
+  const ligaGap=me&&sec?(me.s.rank===1?`+${me.s.points-sec.s.points} sobre el 2n`:`${me.s.points-S.liga[0].s.points} del líder`):'';
+  const NOTE={'qualifies for round of 16':'Classificat directe per a vuitens','round of 16':'Classificat directe per a vuitens','qualifies for knockout round playoffs':'Anirien a la ronda de play-offs','knockout round playoffs':'Anirien a la ronda de play-offs','eliminated':'Eliminat'};
+  const uclNote=u?(u.note?NOTE[(u.note.description||'').toLowerCase()]||u.note.description:`de ${S.ucl.length} equips`):'';
+  const html=rowOf('LaLiga',me,S.liga,ligaGap)+rowOf('Champions League',u,S.ucl,uclNote);
+  $('#kpis').innerHTML=html||'<div class="empty">Sense dades de classificació.</div>';
 }
 function renderForm(){
   const p=played().slice(-5);
