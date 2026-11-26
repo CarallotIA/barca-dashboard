@@ -253,7 +253,7 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .pitch{position:relative;aspect-ratio:68/100;max-height:720px;margin:0 auto;border-radius:14px;background:repeating-linear-gradient(0deg,#0f6b3a 0 9%,#0d5f34 9% 18%);border:2px solid rgba(255,255,255,.35);overflow:hidden}
 .pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.35)}
 .pitch::after{content:"";position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;border:2px solid rgba(255,255,255,.35);border-radius:50%;transform:translate(-50%,-50%)}
-.pp{position:absolute;transform:translate(-50%,-50%);width:20%;text-align:center;cursor:pointer;z-index:2}
+.pp{position:absolute;transform:translate(-50%,-50%);width:16.5%;text-align:center;cursor:pointer;z-index:2}
 .pp .cut{position:relative;aspect-ratio:.72;display:flex;align-items:flex-end;justify-content:center}
 .pp .cut img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(0,0,0,.55))}
 .pp .cut.nocut{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='36' r='17' fill='white' fill-opacity='.6'/><path d='M14 100c0-24 15-38 36-38s36 14 36 38z' fill='white' fill-opacity='.6'/></svg>") center bottom/80% no-repeat}
@@ -565,7 +565,7 @@ const ROL={3:['LI',-2],2:['LI',-2],23:['LD',2],5:['DC',.5],18:['DC',-.5],15:['DC
   11:['EE',-1],14:['EE',-2],17:['EE',-2],10:['ED',2],19:['ED',2],9:['DC9',0],27:['DC9',0],29:['DC9',0]};
 const rolOf=p=>(ROL[p.jersey]||[p.pos,0])[0],sideOf=p=>(ROL[p.jersey]||[0,0])[1];
 const FORM={'4-3-3':{D:4,M:3,F:3},'4-4-2':{D:4,M:4,F:2},'3-4-3':{D:3,M:4,F:3}};
-const YPOS={G:82,D:62,M:41,F:19};
+const YPOS={G:83,D:63,M:42,F:20};
 /* Convocatòria oficial: ESPN publica la llista del rival i del Barça només quan el club la fa pública (~1 dia abans) */
 async function loadCall(){
   S.call=null;
