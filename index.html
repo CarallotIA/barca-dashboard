@@ -122,7 +122,8 @@ main{padding:26px 0 60px}
 .row:last-child{border-bottom:0}
 .row:hover{background:var(--card)}
 .row .d{font-size:12px;color:var(--mut);line-height:1.25}
-.row .d b{display:block;color:var(--txt);font-size:13px;text-transform:capitalize}
+.row .d b{display:block;color:var(--txt);font-size:13px}
+.row .d b::first-letter{text-transform:uppercase}
 .row .m{display:grid;grid-template-columns:1fr 58px 1fr;gap:10px;align-items:center}
 .row .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
 .row .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -238,6 +239,9 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .nlist .im{aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran))}
 .nlist .im img{width:100%;height:100%;object-fit:cover}
 .noimg{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9);background:repeating-linear-gradient(90deg,rgba(0,77,152,.9) 0 18px,rgba(165,0,68,.9) 18px 36px)}
+.tv{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:6px;color:#fff;background:var(--c,#334);white-space:nowrap;border:1px solid rgba(255,255,255,.18)}
+.tv.dazn{--c:#0c0c0c;color:#f7ff00}.tv.mov{--c:#019df4}.tv.ora{--c:#ff7900}.tv.yt{--c:#e62117}.tv.pend{background:transparent;color:var(--mut);font-weight:600;border-style:dashed}
+.tvs{display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:center}
 .igbtn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;color:#fff;background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);box-shadow:0 6px 18px rgba(220,39,67,.35);transition:.15s}
 .igbtn:hover{transform:translateY(-2px)}
 .igbtn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
@@ -403,7 +407,7 @@ footer b{color:var(--txt)}
 </main>
 
 <footer><div class="wrap">
- <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
+ <b>On veure-ho:</b> DóndeVerlo (Espanya). <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
  <b>Fotos:</b> fcbarcelona.com (pàgina oficial de la plantilla); els jugadors que encara no hi surten mostren una silueta. <b>Vídeos:</b> YouTube (club, LALIGA, SPORT, Mundo Deportivo i Jijantes). Escut, fotos i vídeos són propietat del club i dels seus titulars; prototip de treball intern, no oficial.
 </div></footer>
 
@@ -531,7 +535,7 @@ function loadFeedsJs(){
 }
 async function loadNews(force){
   const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
-  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;S.tv=F&&F.tv?F.tv:null;if(S.all.length){renderMatches();renderHero()}if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
   const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
   const out=[];
   if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
@@ -660,7 +664,7 @@ function renderHero(){
       <div>${live?`<div class="score">${nx.home?nx.gf:nx.ga} – ${nx.home?nx.ga:nx.gf}</div>`:`<div class="mid">VS</div>`}</div>
       <div class="tm">${crest(l[1])}${esc(ln[1])}</div></div>
      ${live?'':`<div class="cd" id="cd"></div>`}
-     <div class="meta"><span>📅 ${esc(fmtDayLong(nx.date))}</span><span>🕗 ${esc(fmtTime(nx.date))} (hora de Barcelona)</span>${nx.venue?`<span>🏟 ${esc(nx.venue)}</span>`:''}</div></div><div class="nxr"><div class="nxt">Onze suggerit</div><div class="pitch" id="pitch"></div></div></div>`;
+     <div class="meta"><span>📅 ${esc(fmtDayLong(nx.date))}</span><span>🕗 ${esc(fmtTime(nx.date))} (hora de Barcelona)</span>${tvHtml(nx)?`<span>📺 ${tvHtml(nx)}</span>`:''}${nx.venue?`<span>🏟 ${esc(nx.venue)}</span>`:''}</div></div><div class="nxr"><div class="nxt">Onze suggerit</div><div class="pitch" id="pitch"></div></div></div>`;
     S.cdTarget=live?null:nx.date;tickCd();renderOnze();
   }else{$('#next').innerHTML=`<div class="empty">No hi ha cap partit programat.</div>`;S.cdTarget=null}
   if(lp){
@@ -720,13 +724,22 @@ function renderTop(){
   $('#topScorers').innerHTML=t.length?t.map(p=>`<div class="hbar" style="grid-template-columns:140px 1fr 30px;cursor:pointer" onclick="openPlayer('${p.id}')"><span class="n">${esc(p.name)}</span><div class="b"><i style="width:${val(p)/val(t[0])*100}%"></i></div><span class="v">${val(p)}</span></div>`).join(''):'<div class="empty">Sense gols.</div>';
 }
 $('#tfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.tm=b.dataset.tm;renderTop()});
+function tvKey(d){return d.toLocaleString('sv-SE',{timeZone:TZ}).slice(0,16)}
+function tvHtml(e){
+  if(e.state==='post'||!S.tv)return'';
+  const l=S.tv[tvKey(e.date)];
+  if(l===undefined)return'';
+  if(!l.length)return'<span class="tvs"><span class="tv pend" title="Encara no s\'ha confirmat l\'operador">Canal per confirmar</span></span>';
+  const cls=n=>/dazn/i.test(n)?'dazn':/movistar/i.test(n)?'mov':/orange/i.test(n)?'ora':/youtube/i.test(n)?'yt':'';
+  return`<span class="tvs" title="On veure-ho a Espanya">${l.map(n=>`<span class="tv ${cls(n)}">${esc(n)}</span>`).join('')}</span>`;
+}
 function matchRow(e){
   const l=e.home?['FC Barcelona',e.opp.name]:[e.opp.name,'FC Barcelona'],li=e.home?[TEAM,e.opp.id]:[e.opp.id,TEAM];
   const mid=e.state==='post'?`${e.home?e.gf:e.ga} - ${e.home?e.ga:e.gf}`:e.state==='in'?`${e.home?e.gf:e.ga}-${e.home?e.ga:e.gf}`:fmtTime(e.date);
   return`<div class="row" onclick="openMatch('${e.id}')" role="button" tabindex="0">
     <div class="d"><b>${esc(fmtDay(e.date))}</b>${e.state==='post'||e.state==='in'?fmtTime(e.date):''}</div>
     <div class="m"><div class="t r"><span>${esc(l[0])}</span>${crest(li[0])}</div><div class="s ${e.state==='pre'?'nx':''}">${esc(mid)}</div><div class="t">${crest(li[1])}<span>${esc(l[1])}</span></div></div>
-    <div style="display:flex;gap:8px;align-items:center"><span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${tvHtml(e)}<span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
 }
 function renderUp(){
   const u=upcoming().slice(0,5);

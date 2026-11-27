@@ -182,6 +182,69 @@ def pstats():
     return out or old.get("players", {})
 
 
+DV_URL = "https://dondeverlo.com/equipo/fc-barcelona/"
+TV_FILE = DATA / "tv.json"
+TV_MAX_AGE = 3 * 3600  # una sola consulta cada 3 h: la web ho permet (robots.txt) i les dades canvien poc
+MESOS = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6, "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12}
+CANAL = [  # (text del canal a dondeverlo, plataforma mostrada)
+    ("dazn", "DAZN"), ("m+", "Movistar+"), ("movistar", "Movistar+"), ("orange", "Orange TV"), ("youtube", "YouTube"),
+    ("rtve", "RTVE"), ("tve", "RTVE"), ("tv3", "TV3"), ("3cat", "3Cat"), ("prime", "Prime Video"), ("amazon", "Prime Video"),
+]
+
+
+def _plat(title):
+    low = title.lower()
+    if "solo para bares" in low:  # LaLiga TV Bar: només locals, no és per a l'afició
+        return None
+    for k, v in CANAL:
+        if k in low:
+            return v
+    return title.strip()
+
+
+def tv():
+    """On veure els pròxims partits a Espanya (DóndeVerlo). Retorna {'AAAA-MM-DD HH:MM': [plataformes] | []}."""
+    if TV_FILE.exists():
+        try:
+            old = json.loads(TV_FILE.read_text(encoding="utf-8"))
+            if (datetime.now(timezone.utc) - datetime.fromisoformat(old["generated"].replace("Z", "+00:00"))).total_seconds() < TV_MAX_AGE:
+                print("  (canals recents: es reutilitzen)")
+                return old["tv"]
+        except Exception:
+            pass
+    else:
+        old = None
+    try:
+        raw = urllib.request.urlopen(urllib.request.Request(DV_URL, headers={"User-Agent": "dashboard-barca/1.0 (projecte personal; lectura puntual)"}), timeout=30).read().decode("utf-8", "ignore")
+    except Exception as ex:
+        print("  ✗ DóndeVerlo:", ex)
+        return (old or {}).get("tv", {})
+    out = {}
+    def plats(chunk):
+        res = []
+        for ttl in re.findall(r'class="dv-ch[^"]*"[^>]*title="([^"]+)"', chunk):
+            p = _plat(ttl)
+            if p and p not in res:
+                res.append(p)
+        return res
+    # partit destacat (el proper)
+    m = re.search(r'data-start="(\d{4}-\d\d-\d\d)T(\d\d:\d\d)[^"]*".*?<div class="fc-providers">(.*?)</div>', raw, re.S)
+    if m:
+        out[f"{m.group(1)} {m.group(2)}"] = plats(m.group(3))
+    # llista de pròxims partits: cada fila porta data, hora i (si es coneix) els canals
+    for blk in raw.split('<div class="match-row"')[1:]:
+        d = re.search(r'data-date="(\d{4}-\d\d-\d\d)"', blk)
+        h = re.search(r'<span class="time">(\d\d:\d\d)</span>', blk)
+        if not (d and h):
+            continue
+        pv = re.search(r'class="match-providers">(.*?)</div>', blk, re.S)
+        out.setdefault(f"{d.group(1)} {h.group(1)}", plats(pv.group(1)) if pv else [])
+    if out:
+        TV_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "tv": out}, ensure_ascii=False), encoding="utf-8")
+    print(f"  ✓ {len(out)} partits, {sum(1 for v in out.values() if v)} amb canal")
+    return out or (old or {}).get("tv", {})
+
+
 COMP = {"Spanish LALIGA": "LaLiga", "UEFA Champions League": "Champions", "Spanish Copa del Rey": "Copa del Rei", "Spanish Supercopa": "Supercopa"}
 TROPHY = {"LaLiga": "LaLiga", "Copa del Rey": "Copa del Rei", "Supercopa de España": "Supercopa", "Trofeo Joan Gamper": "Trofeu Joan Gamper", "Champions League": "Champions"}
 COACH_ID = 131509  # Hansi Flick a FotMob
@@ -245,6 +308,12 @@ def main():
     except Exception as ex:
         print("  (baixes no disponibles:", ex, ")")
         bx = None
+    print("On veure els partits (DóndeVerlo):")
+    try:
+        tvd = tv()
+    except Exception as ex:
+        print("  ✗", ex)
+        tvd = None
     print("Entrenador:")
     try:
         co = coach()
@@ -253,7 +322,7 @@ def main():
         co = None
     print("Estadístiques de jugador (FotMob):")
     ps = pstats()
-    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps, "coach": co}
+    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps, "coach": co, "tv": tvd}
     OUT.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"OK: {len(n)} notícies i {len(v)} vídeos a {OUT.name}")
 
