@@ -253,6 +253,19 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .tv.txt{font-size:10px;font-weight:800;color:#0b1220;letter-spacing:.03em}
 .tv.pend{white-space:nowrap;background:transparent;color:var(--mut);font-weight:600;border-style:dashed;font-size:10px;box-shadow:none;height:auto;padding:3px 8px}
 .tvs{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:center}
+.pgrid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.pod{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.pod .ph2{display:flex;gap:12px;align-items:center}
+.pod .ph2 img{width:56px;height:56px;border-radius:12px;object-fit:cover;background:linear-gradient(135deg,var(--blau),var(--gran));flex:none}
+.pod .ph2 b{display:block;font-size:15px;line-height:1.2}
+.pod .ph2 span{font-size:12px;color:var(--mut)}
+.ep{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ep .pb{width:34px;height:34px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--blau),var(--gran));color:#fff;font-size:13px;padding-left:2px;display:grid;place-items:center}
+.ep .pb:hover{filter:brightness(1.15)}
+.ep b{font-size:13px;line-height:1.3;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ep small{font-size:11px;color:var(--mut)}
+.ep audio{grid-column:1/-1;width:100%;height:36px;margin-top:4px}
+.pod a.more{font-size:12px;color:var(--or);text-decoration:none;align-self:flex-start}
 .igbtn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;color:#fff;background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);box-shadow:0 6px 18px rgba(220,39,67,.35);transition:.15s}
 .igbtn:hover{transform:translateY(-2px)}
 .igbtn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
@@ -324,6 +337,7 @@ footer b{color:var(--txt)}
    <button data-v="plantilla">Plantilla</button>
    <button data-v="estadistiques">Estadístiques</button>
    <button data-v="videos">Vídeos</button>
+   <button data-v="podcasts">Podcasts</button>
    <button data-v="noticies">Notícies</button>
   </nav>
   <div class="sync"><span class="dot" id="dot"></span><span id="upd">Carregant…</span><button id="refresh" title="Actualitza ara">↻ Actualitza</button></div>
@@ -408,6 +422,12 @@ footer b{color:var(--txt)}
   <div class="vgrid" id="vidGrid"></div>
  </section>
 
+ <!-- PODCASTS -->
+ <section class="view" id="v-podcasts">
+  <div class="sec-title">Podcasts</div><div class="sec-sub">Programes de ràdio i podcast sobre el Barça: els últims episodis, per escoltar-los aquí mateix. S'actualitzen sols.</div>
+  <div class="grid pgrid" id="podGrid"><div class="skel"></div></div>
+ </section>
+
  <!-- NOTÍCIES -->
  <section class="view" id="v-noticies">
   <div class="sec-title">Notícies</div><div class="sec-sub">Titulars de Mundo Deportivo, SPORT, ESPN, premsa catalana i altres mitjans. S'obren a la font original; les de SPORT i la premsa passen per Google Notícies.</div>
@@ -418,7 +438,7 @@ footer b{color:var(--txt)}
 </main>
 
 <footer><div class="wrap">
- <b>On veure-ho:</b> DóndeVerlo (Espanya). <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
+ <b>Podcasts:</b> RSS públics de Catalunya Ràdio, RAC1 i Cadena SER. <b>On veure-ho:</b> DóndeVerlo (Espanya). <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
  <b>Fotos:</b> fcbarcelona.com (pàgina oficial de la plantilla); els jugadors que encara no hi surten mostren una silueta. <b>Vídeos:</b> YouTube (club, LALIGA, SPORT, Mundo Deportivo i Jijantes). Escut, fotos i vídeos són propietat del club i dels seus titulars; prototip de treball intern, no oficial.
 </div></footer>
 
@@ -546,7 +566,7 @@ function loadFeedsJs(){
 }
 async function loadNews(force){
   const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
-  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;S.tv=F&&F.tv?F.tv:null;if(S.all.length){renderMatches();renderHero()}if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;S.pods=F&&F.pods?F.pods:null;if(typeof renderPods==='function')renderPods();S.tv=F&&F.tv?F.tv:null;if(S.all.length){renderMatches();renderHero()}if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
   const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
   const out=[];
   if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
@@ -888,6 +908,22 @@ function renderNews(){
   $('#newsMini').innerHTML=all.slice(0,5).map(n=>`<a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><div class="im">${n.img&&safeUrl(n.img)?`<img src="${esc(n.img)}" alt="" loading="lazy" onerror="this.remove()">`:`<div class="noimg">${esc(n.srcName)}</div>`}</div><div><b>${esc(n.title)}</b><span>${esc(n.srcName)} · ${esc(isNaN(n.date)?'':ago(n.date))}</span></div></a>`).join('')||'<div class="empty">Notícies no disponibles.</div>';
 }
 
+/* ======== Podcasts ======== */
+function renderPods(){
+  const el=$('#podGrid');if(!el)return;
+  const P=S.pods;
+  if(!P||!P.length){el.innerHTML='<div class="empty">Podcasts no disponibles ara mateix.</div>';return}
+  el.innerHTML=P.map(p=>`<div class="pod"><div class="ph2">${p.img&&safeUrl(p.img)?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.removeAttribute('src')">`:'<img alt="">'}<div><b>${esc(p.name)}</b><span>${esc(p.net)}</span></div></div>
+   <div>${p.eps.map((e,i)=>`<div class="ep" data-k="${esc(p.key)}" data-i="${i}"><button class="pb" aria-label="Escolta" title="Escolta">▶</button><div><b>${esc(e.title)}</b><small>${esc(ago(new Date(e.date)))} · ${esc(fmtDay(new Date(e.date)))}${e.dur?' · '+esc(e.dur):''}</small></div></div>`).join('')}</div>
+   <a class="more" href="${esc(p.site)}" target="_blank" rel="noopener noreferrer">Tots els episodis ↗</a></div>`).join('');
+}
+$('#podGrid').addEventListener('click',e=>{
+  const b=e.target.closest('.pb');if(!b)return;
+  const row=b.closest('.ep'),p=(S.pods||[]).find(x=>x.key===row.dataset.k),ep=p&&p.eps[+row.dataset.i];if(!ep||!safeUrl(ep.audio))return;
+  document.querySelectorAll('#podGrid audio').forEach(a=>{a.pause();a.remove()});
+  const a=document.createElement('audio');a.controls=true;a.autoplay=true;a.preload='none';a.src=ep.audio;row.appendChild(a);
+});
+
 /* ======== Vídeos ======== */
 const ytq=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
 const canEmbed=()=>/^https?:$/.test(location.protocol);
@@ -1032,7 +1068,7 @@ setInterval(()=>{
 },15000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-S.last.m>60e3){loadMatches();loadNews();loadVideos()}});
 
-const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','noticies'].includes(h))show(h);
+const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','podcasts','noticies'].includes(h))show(h);
 loadMatches();loadNews();loadVideos();
 </script>
 </body>

@@ -182,6 +182,83 @@ def pstats():
     return out or old.get("players", {})
 
 
+ITUNES = "{http://www.itunes.com/dtds/podcast-1.0.dtd}"
+PODS_FILE = DATA / "pods.json"
+PODS_MAX_AGE = 20 * 60
+# Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
+PODS = [
+    {"key": "latdt", "name": "LaTdT", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/8/5/podprograma1858.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
+    {"key": "tercer", "name": "El tercer temps", "net": "Catalunya Ràdio · LaTdT", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
+    {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
+    {"key": "tudiras", "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
+    {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},
+    {"key": "mitjanit", "name": "El club de la mitjanit", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/8/1/podprograma1218.xml", "site": "https://www.ccma.cat/catradio/el-club-de-la-mitjanit/"},
+    {"key": "elbar", "name": "El Bar", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/el-bar/itunestfp", "site": "https://cadenaser.com/programa/el-bar/"},
+    {"key": "totcosta", "name": "Tot costa", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/4/3/podprograma1734.xml", "site": "https://www.ccma.cat/catradio/tot-costa/"},
+]
+
+
+def _dur(s):
+    s = (s or "").strip()
+    try:
+        if ":" in s:
+            p = [int(x) for x in s.split(":")]
+            sec = p[0] * 3600 + p[1] * 60 + p[2] if len(p) == 3 else p[0] * 60 + p[1]
+        else:
+            sec = int(float(s))
+    except Exception:
+        return ""
+    h, m = divmod(sec // 60, 60)
+    return (f"{h} h {m:02d} min" if h else f"{m} min") if sec else ""
+
+
+def pods():
+    """Últims episodis de cada programa a partir del seu RSS públic."""
+    if PODS_FILE.exists():
+        try:
+            old = json.loads(PODS_FILE.read_text(encoding="utf-8"))
+            if (datetime.now(timezone.utc) - datetime.fromisoformat(old["generated"].replace("Z", "+00:00"))).total_seconds() < PODS_MAX_AGE:
+                print("  (podcasts recents: es reutilitzen)")
+                return old["pods"]
+        except Exception:
+            old = None
+    else:
+        old = None
+    out = []
+    for p in PODS:
+        try:
+            ch = ET.fromstring(get(p["url"])).find("channel")
+        except Exception as ex:
+            print(f"  ✗ {p['name']}: {ex}")
+            prev = next((x for x in (old or {}).get("pods", []) if x["key"] == p["key"]), None)
+            if prev:
+                out.append(prev)
+            continue
+        img = ch.find(ITUNES + "image")
+        eps = []
+        for it in ch.findall("item"):
+            title = plain(it.findtext("title") or "")
+            if p.get("only") and p["only"].lower() not in title.lower():
+                continue
+            enc = it.find("enclosure")
+            if enc is None or not enc.get("url", "").startswith("https://"):
+                continue
+            try:
+                date = iso(parsedate_to_datetime(it.findtext("pubDate")))
+            except Exception:
+                continue
+            eps.append({"title": title, "date": date, "dur": _dur(it.findtext(ITUNES + "duration")), "audio": enc.get("url"), "link": it.findtext("link") or p["site"]})
+            if len(eps) >= 4:
+                break
+        if eps:
+            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "site": p["site"],
+                        "img": (img.get("href") if img is not None else "") or (ch.findtext("image/url") or ""), "eps": eps})
+    if out:
+        PODS_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")
+    print(f"  ✓ {len(out)} programes, {sum(len(x['eps']) for x in out)} episodis")
+    return out or (old or {}).get("pods", [])
+
+
 DV_URL = "https://dondeverlo.com/equipo/fc-barcelona/"
 TV_FILE = DATA / "tv.json"
 TV_MAX_AGE = 3 * 3600  # una sola consulta cada 3 h: la web ho permet (robots.txt) i les dades canvien poc
@@ -308,6 +385,12 @@ def main():
     except Exception as ex:
         print("  (baixes no disponibles:", ex, ")")
         bx = None
+    print("Podcasts:")
+    try:
+        pd = pods()
+    except Exception as ex:
+        print("  ✗", ex)
+        pd = None
     print("On veure els partits (DóndeVerlo):")
     try:
         tvd = tv()
@@ -322,7 +405,7 @@ def main():
         co = None
     print("Estadístiques de jugador (FotMob):")
     ps = pstats()
-    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps, "coach": co, "tv": tvd}
+    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps, "coach": co, "tv": tvd, "pods": pd}
     OUT.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"OK: {len(n)} notícies i {len(v)} vídeos a {OUT.name}")
 
