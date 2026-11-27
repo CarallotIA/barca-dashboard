@@ -187,7 +187,7 @@ PODS_FILE = DATA / "pods.json"
 PODS_MAX_AGE = 20 * 60
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
-    {"key": "tercer", "name": "LaTdT · El tercer temps (post-partit)", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
+    {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
     {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
     {"key": "tudiras", "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
     {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},
@@ -211,6 +211,32 @@ def _dur(s):
     return (f"{h} h {m:02d} min" if h else f"{m} min") if sec else ""
 
 
+SPOTIFY_SHOWS = [{"key": "spc", "name": "Sólo para culés", "net": "El Chiringuito · Spotify", "id": "0WDMdLQFO7wThN6JGpcMeI"}]
+
+
+def spotify_show(s):
+    """Últims episodis d'un programa que només és a Spotify: IDs de la pàgina pública i dades de l'embed oficial de cada episodi."""
+    page = get(f"https://open.spotify.com/show/{s['id']}").decode("utf-8", "ignore")
+    ids = list(dict.fromkeys(re.findall(r"spotify:episode:([A-Za-z0-9]{22})|/episode/([A-Za-z0-9]{22})", page)))
+    ids = [a or b for a, b in ids][:6]
+    eps, cover = [], ""
+    for i in ids:
+        try:
+            h = get(f"https://open.spotify.com/embed/episode/{i}").decode("utf-8", "ignore")
+            m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', h, re.S)
+            ent = json.loads(m.group(1))["props"]["pageProps"]["state"]["data"]["entity"]
+            if ent.get("relatedEntityUri") != f"spotify:show:{s['id']}":
+                continue
+            if not cover:
+                cover = next((c["url"] for c in ent.get("relatedEntityCoverArt", []) if c.get("maxWidth") == 300), "")
+            eps.append({"title": plain(ent["title"]), "date": ent["releaseDate"]["isoString"], "dur": _dur(str(int(ent.get("duration", 0) / 1000))),
+                        "spot": i, "link": f"https://open.spotify.com/episode/{i}"})
+        except Exception as ex:
+            print(f"  ✗ episodi {i}: {ex}")
+    eps.sort(key=lambda e: e["date"], reverse=True)
+    return {"key": s["key"], "name": s["name"], "net": s["net"], "site": f"https://open.spotify.com/show/{s['id']}", "img": cover, "eps": eps[:4]} if eps else None
+
+
 def pods():
     """Últims episodis de cada programa a partir del seu RSS públic."""
     if PODS_FILE.exists():
@@ -224,6 +250,16 @@ def pods():
     else:
         old = None
     out = []
+    for s in SPOTIFY_SHOWS:
+        try:
+            r = spotify_show(s)
+            if r:
+                out.append(r)
+        except Exception as ex:
+            print(f"  ✗ {s['name']}: {ex}")
+            prev = next((x for x in (old or {}).get("pods", []) if x["key"] == s["key"]), None)
+            if prev:
+                out.append(prev)
     for p in PODS:
         try:
             ch = ET.fromstring(get(p["url"])).find("channel")
@@ -250,7 +286,7 @@ def pods():
             if len(eps) >= 4:
                 break
         if eps:
-            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "site": p["site"],
+            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "site": p["site"] or ch.findtext("link") or "",
                         "img": (img.get("href") if img is not None else "") or (ch.findtext("image/url") or ""), "eps": eps})
     if out:
         PODS_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")
