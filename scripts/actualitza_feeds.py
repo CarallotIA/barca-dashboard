@@ -187,8 +187,7 @@ PODS_FILE = DATA / "pods.json"
 PODS_MAX_AGE = 20 * 60
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
-    {"key": "latdt", "name": "LaTdT", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/8/5/podprograma1858.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
-    {"key": "tercer", "name": "El tercer temps", "net": "Catalunya Ràdio · LaTdT", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
+    {"key": "tercer", "name": "LaTdT · El tercer temps (post-partit)", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
     {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
     {"key": "tudiras", "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
     {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},

@@ -438,7 +438,7 @@ footer b{color:var(--txt)}
 </main>
 
 <footer><div class="wrap">
- <b>Podcasts:</b> RSS públics de Catalunya Ràdio, RAC1 i Cadena SER. <b>On veure-ho:</b> DóndeVerlo (Espanya). <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
+ <b>Podcasts:</b> RSS públics de Catalunya Ràdio, RAC1 i Cadena SER, i Spotify. <b>On veure-ho:</b> DóndeVerlo (Espanya). <b>Dades:</b> ESPN (resultats, classificació, plantilla, estadístiques) · notícies de Mundo Deportivo, SPORT, ESPN i Google Notícies · vídeos de YouTube. Es refresquen soles: cada 30 s si hi ha partit en directe, cada 5 min en repòs i cada 10 min les notícies.<br>
  <b>Fotos:</b> fcbarcelona.com (pàgina oficial de la plantilla); els jugadors que encara no hi surten mostren una silueta. <b>Vídeos:</b> YouTube (club, LALIGA, SPORT, Mundo Deportivo i Jijantes). Escut, fotos i vídeos són propietat del club i dels seus titulars; prototip de treball intern, no oficial.
 </div></footer>
 
@@ -909,11 +909,16 @@ function renderNews(){
 }
 
 /* ======== Podcasts ======== */
+/* Programes que només són a Spotify (sense RSS públic): es mostra el reproductor oficial incrustat. */
+const SPOTIFY_SHOWS=[{key:'spc',name:'Sólo para culés',net:'Spotify · Jota Jordi, Gaspart, Freixa i Carrasco',id:'0WDMdLQFO7wThN6JGpcMeI',site:'https://open.spotify.com/show/0WDMdLQFO7wThN6JGpcMeI'}];
+const spotCard=s=>`<div class="pod spot"><div class="ph2"><div style="width:56px;height:56px;border-radius:12px;background:#1db954;display:grid;place-items:center;font-size:26px;flex:none">🎧</div><div><b>${esc(s.name)}</b><span>${esc(s.net)}</span></div></div>
+   <iframe title="${esc(s.name)} a Spotify" src="https://open.spotify.com/embed/show/${esc(s.id)}" width="100%" height="352" frameborder="0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="border-radius:12px;border:0"></iframe>
+   <a class="more" href="${esc(s.site)}" target="_blank" rel="noopener noreferrer">Obre a Spotify ↗</a></div>`;
 function renderPods(){
   const el=$('#podGrid');if(!el)return;
   const P=S.pods;
-  if(!P||!P.length){el.innerHTML='<div class="empty">Podcasts no disponibles ara mateix.</div>';return}
-  el.innerHTML=P.map(p=>`<div class="pod"><div class="ph2">${p.img&&safeUrl(p.img)?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.removeAttribute('src')">`:'<img alt="">'}<div><b>${esc(p.name)}</b><span>${esc(p.net)}</span></div></div>
+  if(!P||!P.length){el.innerHTML=SPOTIFY_SHOWS.map(spotCard).join('')+'<div class="empty">Els altres podcasts no estan disponibles ara mateix.</div>';return}
+  el.innerHTML=SPOTIFY_SHOWS.map(spotCard).join('')+P.map(p=>`<div class="pod"><div class="ph2">${p.img&&safeUrl(p.img)?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.removeAttribute('src')">`:'<img alt="">'}<div><b>${esc(p.name)}</b><span>${esc(p.net)}</span></div></div>
    <div>${p.eps.map((e,i)=>`<div class="ep" data-k="${esc(p.key)}" data-i="${i}"><button class="pb" aria-label="Escolta" title="Escolta">▶</button><div><b>${esc(e.title)}</b><small>${esc(ago(new Date(e.date)))} · ${esc(fmtDay(new Date(e.date)))}${e.dur?' · '+esc(e.dur):''}</small></div></div>`).join('')}</div>
    <a class="more" href="${esc(p.site)}" target="_blank" rel="noopener noreferrer">Tots els episodis ↗</a></div>`).join('');
 }
