@@ -113,7 +113,9 @@ main{padding:26px 0 60px}
 .form{display:flex;gap:8px;flex-wrap:wrap}
 .pill{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px;color:#06122b}
 .pill.W{background:var(--win)}.pill.D{background:var(--draw)}.pill.L{background:var(--loss)}
-.pill.sm{width:26px;height:26px;font-size:12px}
+.pill{flex:none}
+.pill.sm{width:26px;height:26px;font-size:12px;min-width:26px}
+.rv .t>span:last-child{min-width:0}
 
 /* Llistes */
 .row{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.12s}
@@ -265,6 +267,7 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .rv .t{display:flex;align-items:center;gap:8px;font-weight:600}
 .rv .t img{width:24px;height:24px;object-fit:contain}
 .rv .b{display:flex;gap:6px;flex-wrap:wrap}
+.rv.wide{grid-template-columns:1fr}
 .rv .b .btn{font-size:12px;padding:6px 11px;text-decoration:none}
 .pitch{position:relative;aspect-ratio:68/100;max-height:720px;margin:0 auto;border-radius:14px;background:repeating-linear-gradient(0deg,#0f6b3a 0 9%,#0d5f34 9% 18%);border:2px solid rgba(255,255,255,.35);overflow:hidden}
 .pitch::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.35)}
@@ -866,7 +869,7 @@ function renderVideos(){
   const pl=played().slice(-6).reverse();
   $('#recap').innerHTML=pl.map(m=>{
     const mv=matchVideos(m),d=m.date.toLocaleDateString('ca-ES',{day:'numeric',month:'short',timeZone:TZ}),q=matchQuery(m);
-    return`<div class="rv"><div class="t"><span class="pill sm ${m.res}">${m.res==='W'?'V':m.res==='L'?'D':'E'}</span>${crest(m.opp.id)}<span>${m.home?'Barça':esc(m.opp.name)} ${m.home?m.gf:m.ga}-${m.home?m.ga:m.gf} ${m.home?esc(m.opp.name):'Barça'} <span style="color:var(--mut);font-weight:400;font-size:12px">· ${esc(m.comp)} · ${esc(d)}</span></span></div>
+    return`<div class="rv ${mv.length>2?'wide':''}"><div class="t"><span class="pill sm ${m.res}">${m.res==='W'?'V':m.res==='L'?'D':'E'}</span>${crest(m.opp.id)}<span>${m.home?'Barça':esc(m.opp.name)} ${m.home?m.gf:m.ga}-${m.home?m.ga:m.gf} ${m.home?esc(m.opp.name):'Barça'} <span style="color:var(--mut);font-weight:400;font-size:12px">· ${esc(m.comp)} · ${esc(d)}</span></span></div>
      <div class="b">${mv.map(v=>`<button class="btn" onclick="openVideo('${v.id}')">▶ ${esc(v.title.length>34?v.title.slice(0,34)+'…':v.title)}</button>`).join('')}
      <a class="btn" href="${ytq(q+' highlights resum')}" target="_blank" rel="noopener noreferrer">▶ Resum</a>
      <a class="btn" href="${ytq(q+' goals gols')}" target="_blank" rel="noopener noreferrer">⚽ Gols</a></div></div>`}).join('')||'<div class="empty">Encara no hi ha partits jugats.</div>';
