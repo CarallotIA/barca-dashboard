@@ -161,7 +161,7 @@ td.pts{font-weight:900}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 
 /* Plantilla */
-.coach{display:flex;gap:20px;align-items:center;margin-bottom:20px;background:linear-gradient(135deg,rgba(0,77,152,.5),rgba(165,0,68,.4));border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:18px 22px}
+.coach{display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin-bottom:20px;background:linear-gradient(135deg,rgba(0,77,152,.5),rgba(165,0,68,.4));border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:18px 22px}
 .coach .av{width:92px;height:92px;border-radius:50%;object-fit:cover;object-position:top;border:3px solid var(--or);background:#0a1d47}
 .coach small{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--or);font-weight:700}
 .coach h3{font-size:26px;font-weight:800}
@@ -531,7 +531,7 @@ function loadFeedsJs(){
 }
 async function loadNews(force){
   const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
-  S.ps=F&&F.pstats?F.pstats:null;if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
   const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
   const out=[];
   if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
@@ -751,9 +751,25 @@ function renderStandings(){
     return`<tr class="${r.id===TEAM?'me':''}"><td class="pos">${r.note?`<i style="background:${esc(r.note.color)}"></i>`:''}${s.rank}</td><td class="tm l">${crest(r.id)}${esc(r.name)}</td><td>${s.gamesPlayed}</td><td>${s.wins}</td><td>${s.ties}</td><td>${s.losses}</td><td>${s.pointsFor}</td><td>${s.pointsAgainst}</td><td>${s.pointDifferential>0?'+':''}${s.pointDifferential}</td><td class="pts">${s.points}</td></tr>`}).join('')+
    `</tbody></table><div class="legend">${[...notes].map(([d,c])=>`<span><i style="background:${esc(c)}"></i>${esc(d)}</span>`).join('')}</div>`;
 }
+function renderCoach(){
+  const el=$('#coachStats');if(!el)return;
+  const c=S.coach;if(!c){el.innerHTML='';return}
+  const f=S.cf||'total',keys=['total',...Object.keys(c.comps).sort((a,b)=>c.comps[b].pj-c.comps[a].pj)];
+  const s=f==='total'?c.total:c.comps[f]||c.total;
+  const pct=s.pj?Math.round(s.v/s.pj*100):0,dg=s.gf-s.gc;
+  const cells=[['Partits',s.pj],['Victòries',s.v],['Empats',s.e],['Derrotes',s.d],['% victòries',pct+'%'],['Gols a favor',s.gf],['Gols en contra',s.gc],['Diferència',(dg>0?'+':'')+dg]];
+  const nt=c.trophies.reduce((a,x)=>a+x.won.length,0),y=a=>a.replace(/(\d{4})\/(\d{2})(\d{2})/,'$1-$3');
+  el.innerHTML=`<div class="filters" style="margin:14px 0 10px">${keys.map(k=>`<button class="f ${k===f?'on':''}" data-cf="${esc(k)}">${k==='total'?'Totes':esc(k)}</button>`).join('')}</div>
+   <div class="sgrid" style="grid-template-columns:repeat(8,1fr)">${cells.map(([k,v])=>`<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
+   <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--or);font-weight:700;margin:16px 0 8px">🏆 Trofeus amb el Barça · ${nt}</div>
+   <div style="display:flex;flex-wrap:wrap;gap:8px">${c.trophies.map(x=>`<span class="comp alt" style="font-size:12px;padding:6px 12px">${esc(x.name)} ×${x.won.length} <span style="opacity:.75">· ${x.won.map(y).join(', ')}</span></span>`).join('')||'<span style="color:var(--mut);font-size:13px">Sense dades.</span>'}</div>
+   <div style="color:var(--mut);font-size:12px;margin-top:10px">Partits oficials des del ${new Date(c.since).toLocaleDateString('ca-ES',{day:'numeric',month:'long',year:'numeric'})}. Les tandes de penals es compten com a empat.</div>`;
+}
+$('#coach').addEventListener('click',e=>{const b=e.target.closest('[data-cf]');if(!b)return;S.cf=b.dataset.cf;renderCoach()});
 function renderSquad(){
   const ph=FCB.coach?.img?FCB.coach.img+'?width=470':'';
-  $('#coach').innerHTML=`${ph?`<img class="av" src="${esc(ph)}" alt="" onerror="this.style.display='none'">`:''}<div><small>Entrenador</small><h3>${esc(FCB.coach?.name||S.coachName)}</h3><p>Primer equip del FC Barcelona · ${S.roster.length} jugadors a la plantilla${FCB.coach?.url?` · <a href="${esc(FCB.coach.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--or)">Fitxa oficial ↗</a>`:''}</p></div>`;
+  $('#coach').innerHTML=`<div style="display:flex;gap:20px;align-items:center;width:100%">${ph?`<img class="av" src="${esc(ph)}" alt="" onerror="this.style.display='none'">`:''}<div><small>Entrenador</small><h3>${esc(FCB.coach?.name||S.coachName)}</h3><p>Primer equip del FC Barcelona · ${S.roster.length} jugadors a la plantilla${FCB.coach?.url?` · <a href="${esc(FCB.coach.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--or)">Fitxa oficial ↗</a>`:''}</p></div></div><div id="coachStats" style="width:100%"></div>`;
+  renderCoach();
   let l=S.roster.filter(p=>S.pf==='all'||p.pos===S.pf);
   const q=($('#psearch').value||'').toLowerCase().trim();
   if(q)l=l.filter(p=>p.name.toLowerCase().includes(q)||String(p.jersey)===q);
@@ -950,8 +966,9 @@ async function openMatch(id){
     const tm=d.boxscore?.teams||[];const a=tm.find(t=>t.team.id===TEAM),b=tm.find(t=>t.team.id!==TEAM);
     if(a&&b){
       const gv=(t,n)=>parseFloat(t.statistics.find(s=>s.name===n)?.displayValue||0);
-      const defs=[['Possessió %','possessionPct'],['Xuts','totalShots'],['Xuts a porteria','shotsOnTarget'],['Córners','wonCorners'],['Faltes','foulsCommitted'],['Passades','totalPasses']];
-      h+=`<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:20px 0 4px">Estadístiques (FC Barcelona · rival)</div>`+defs.map(([k,n])=>{const x=gv(a,n),y=gv(b,n),t=(x+y)||1;
+      const pc=(t,x,y)=>{const n=gv(t,x),m=gv(t,y);return m?Math.round(n/m*100):0};
+      const defs=[['Possessió %','possessionPct'],['Xuts','totalShots'],['Xuts a porteria','shotsOnTarget'],['Xuts bloquejats','blockedShots'],['Córners','wonCorners'],['Passades','totalPasses'],['Precisió de passades %',t=>pc(t,'accuratePasses','totalPasses')],['Centrades','totalCrosses'],['Precisió de centrades %',t=>pc(t,'accurateCrosses','totalCrosses')],['Pilotes llargues','totalLongBalls'],['Entrades','totalTackles'],['Intercepcions','interceptions'],['Rebutjos','totalClearance'],['Aturades','saves'],['Faltes','foulsCommitted'],['Fora de joc','offsides'],['Targetes grogues','yellowCards'],['Targetes vermelles','redCards']];
+      h+=`<div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:20px 0 4px">Estadístiques (FC Barcelona · rival)</div>`+defs.map(([k,n])=>{const x=typeof n==='function'?n(a):gv(a,n),y=typeof n==='function'?n(b):gv(b,n),t=(x+y)||1;
         return`<div class="sb"><span class="v">${x}</span><div><div class="c">${k}</div><div class="bars"><i style="width:${x/t*100}%"></i><i style="width:${y/t*100}%"></i></div></div><span class="v">${y}</span></div>`}).join('');
     }
     h=vidBlock(m)+h;

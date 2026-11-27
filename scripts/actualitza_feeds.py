@@ -182,6 +182,55 @@ def pstats():
     return out or old.get("players", {})
 
 
+COMP = {"Spanish LALIGA": "LaLiga", "UEFA Champions League": "Champions", "Spanish Copa del Rey": "Copa del Rei", "Spanish Supercopa": "Supercopa"}
+TROPHY = {"LaLiga": "LaLiga", "Copa del Rey": "Copa del Rei", "Supercopa de España": "Supercopa", "Trofeo Joan Gamper": "Trofeu Joan Gamper", "Champions League": "Champions"}
+COACH_ID = 131509  # Hansi Flick a FotMob
+COACH_SINCE = datetime(2024, 5, 29, tzinfo=timezone.utc)
+
+
+def coach():
+    """Estadístiques de l'entrenador amb el Barça per competició (ESPN) i trofeus (FotMob)."""
+    comps, total = {}, {"pj": 0, "v": 0, "e": 0, "d": 0, "gf": 0, "gc": 0}
+    seasons = [2024, 2025, datetime.now(timezone.utc).year if datetime.now(timezone.utc).month >= 7 else datetime.now(timezone.utc).year - 1]
+    seen = set()
+    for s in sorted(set(seasons)):
+        try:
+            d = _json(f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/83/schedule?season={s}")
+        except Exception as ex:
+            print(f"  ✗ temporada {s}: {ex}")
+            continue
+        for e in d.get("events", []):
+            c = e["competitions"][0]
+            name = COMP.get((e.get("league") or {}).get("name") or e.get("seasonType", {}).get("name"))
+            if not name or not c["status"]["type"].get("completed") or e["id"] in seen:
+                continue
+            if datetime.fromisoformat(e["date"].replace("Z", "+00:00")) < COACH_SINCE:
+                continue
+            seen.add(e["id"])
+            me = next(x for x in c["competitors"] if x["team"]["id"] == "83")
+            op = next(x for x in c["competitors"] if x["team"]["id"] != "83")
+            gf, gc = int(float(me["score"]["displayValue"] if isinstance(me["score"], dict) else me["score"])), int(float(op["score"]["displayValue"] if isinstance(op["score"], dict) else op["score"]))
+            k = "v" if gf > gc else "d" if gf < gc else "e"
+            for tgt in (comps.setdefault(name, {"pj": 0, "v": 0, "e": 0, "d": 0, "gf": 0, "gc": 0}), total):
+                tgt["pj"] += 1
+                tgt[k] += 1
+                tgt["gf"] += gf
+                tgt["gc"] += gc
+    trophies = []
+    try:
+        j = _json(FOTMOB + f"playerData?id={COACH_ID}")
+        for team in (j.get("trophies") or {}).get("coachTrophies", []):
+            if team.get("teamId") != 8634:
+                continue
+            for tr in team["tournaments"]:
+                if tr.get("seasonsWon"):
+                    trophies.append({"name": TROPHY.get(tr["leagueName"], tr["leagueName"]), "won": sorted(tr["seasonsWon"])})
+    except Exception as ex:
+        print("  ✗ trofeus:", ex)
+    print(f"  ✓ {total['pj']} partits oficials · {len(trophies)} tipus de trofeus")
+    return {"name": "Hansi Flick", "since": COACH_SINCE.date().isoformat(), "total": total, "comps": comps, "trophies": trophies} if total["pj"] else None
+
+
 def main():
     print("Notícies:")
     n = news()
@@ -196,9 +245,15 @@ def main():
     except Exception as ex:
         print("  (baixes no disponibles:", ex, ")")
         bx = None
+    print("Entrenador:")
+    try:
+        co = coach()
+    except Exception as ex:
+        print("  ✗", ex)
+        co = None
     print("Estadístiques de jugador (FotMob):")
     ps = pstats()
-    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps}
+    data = {"generated": iso(datetime.now(timezone.utc)), "news": n, "videos": v, "baixes": bx, "pstats": ps, "coach": co}
     OUT.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"OK: {len(n)} notícies i {len(v)} vídeos a {OUT.name}")
 
