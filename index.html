@@ -239,8 +239,11 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .nlist .im{aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran))}
 .nlist .im img{width:100%;height:100%;object-fit:cover}
 .noimg{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9);background:repeating-linear-gradient(90deg,rgba(0,77,152,.9) 0 18px,rgba(165,0,68,.9) 18px 36px)}
-.tv{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.03em;padding:3px 8px;border-radius:6px;color:#fff;background:var(--c,#334);white-space:nowrap;border:1px solid rgba(255,255,255,.18)}
-.tv.dazn{--c:#0c0c0c;color:#f7ff00}.tv.mov{--c:#019df4}.tv.ora{--c:#ff7900}.tv.yt{--c:#e62117}.tv.pend{background:transparent;color:var(--mut);font-weight:600;border-style:dashed}
+.tv{display:inline-flex;align-items:center;justify-content:center;height:34px;min-width:52px;padding:0 10px;border-radius:7px;background:var(--c,#fff);border:1px solid rgba(255,255,255,.22);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.tv img{height:22px;width:auto;max-width:72px;display:block}
+.tv.dazn{--c:#0c0c0c}.tv.mov{--c:#fff}.tv.ora{--c:#000;padding:0 6px}.tv.ora img{height:24px}.tv.yt{--c:#fff}
+.tv.txt{font-size:10px;font-weight:800;color:#0b1220;letter-spacing:.03em}
+.tv.pend{background:transparent;color:var(--mut);font-weight:600;border-style:dashed;font-size:10px;box-shadow:none;height:auto;padding:3px 8px}
 .tvs{display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:center}
 .igbtn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;color:#fff;background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);box-shadow:0 6px 18px rgba(220,39,67,.35);transition:.15s}
 .igbtn:hover{transform:translateY(-2px)}
@@ -731,7 +734,8 @@ function tvHtml(e){
   if(l===undefined)return'';
   if(!l.length)return'<span class="tvs"><span class="tv pend" title="Encara no s\'ha confirmat l\'operador">Canal per confirmar</span></span>';
   const cls=n=>/dazn/i.test(n)?'dazn':/movistar/i.test(n)?'mov':/orange/i.test(n)?'ora':/youtube/i.test(n)?'yt':'';
-  return`<span class="tvs" title="On veure-ho a Espanya">${l.map(n=>`<span class="tv ${cls(n)}">${esc(n)}</span>`).join('')}</span>`;
+  const logo={dazn:'dazn',mov:'movistar',ora:'orange',yt:'youtube'};
+  return`<span class="tvs" title="On veure-ho a Espanya">${l.map(n=>{const c=cls(n);return logo[c]?`<span class="tv ${c}" title="${esc(n)}"><img src="logos/${logo[c]}.svg" alt="${esc(n)}"></span>`:`<span class="tv txt">${esc(n)}</span>`}).join('')}</span>`;
 }
 function matchRow(e){
   const l=e.home?['FC Barcelona',e.opp.name]:[e.opp.name,'FC Barcelona'],li=e.home?[TEAM,e.opp.id]:[e.opp.id,TEAM];
