@@ -126,21 +126,24 @@ main{padding:26px 0 60px}
 .row .d{font-size:12px;color:var(--mut);line-height:1.25}
 .row .d b{display:block;color:var(--txt);font-size:13px;white-space:nowrap}
 .row .d b::first-letter{text-transform:uppercase}
-.row .m{display:grid;grid-template-columns:1fr 58px 1fr;gap:10px;align-items:center}
+.row .m{display:grid;grid-template-columns:minmax(0,1fr) 58px minmax(0,1fr);gap:10px;align-items:center}
 .row .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
 .row .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .t.r{justify-content:flex-end;text-align:right}
 .row .t img{width:26px;height:26px;object-fit:contain;flex:none}
-.row>div:last-child{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-end}
-.row.cmp{grid-template-columns:104px minmax(0,1fr)}
-.row.cmp>div:last-child{grid-column:2;justify-content:center}
+.row:not(.cmp)>div:last-child{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-end}
+.row.cmp{grid-template-columns:150px minmax(0,1fr)}
+.row.cmp .dx{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.row.cmp .tv{height:18px;padding:0 1px}.row.cmp .tv img{height:14px;max-width:44px}.row.cmp .tv.ora img{height:16px}
+.row.cmp .tvs{gap:5px;justify-content:flex-start}.row.cmp .comp{font-size:9px;padding:2px 7px}
+.row.cmp .tv.pend{font-size:9px;padding:2px 6px}
 .row .s{text-align:center;font-weight:800;font-size:16px;background:rgba(0,0,0,.28);border-radius:8px;padding:3px 0;font-variant-numeric:tabular-nums}
 .row .s.nx{font-weight:600;font-size:13px;color:var(--mut)}
 .comp{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
 .comp.liga{color:#ffd1e0;border-color:rgba(212,18,95,.55);background:rgba(165,0,68,.25)}
 .comp.ucl{color:#cfe3ff;border-color:rgba(26,111,209,.7);background:rgba(0,77,152,.35)}
 .comp.alt{color:#ffe9a3;border-color:rgba(237,187,0,.4);background:rgba(237,187,0,.1)}
-@media(max-width:640px){.row,.row.cmp{grid-template-columns:1fr;gap:6px}.row.cmp>div:last-child,.row>div:last-child{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.row .m{grid-template-columns:1fr 52px 1fr}}
+@media(max-width:640px){.row,.row.cmp{grid-template-columns:1fr;gap:6px}.row:not(.cmp)>div:last-child{justify-content:flex-start;flex-wrap:wrap}.row .m{grid-template-columns:1fr 52px 1fr}}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .f{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;color:var(--mut)}
 .f:hover{color:var(--txt)}
@@ -745,10 +748,11 @@ function tvHtml(e){
 function matchRow(e,cmp){
   const l=e.home?['FC Barcelona',e.opp.name]:[e.opp.name,'FC Barcelona'],li=e.home?[TEAM,e.opp.id]:[e.opp.id,TEAM];
   const mid=e.state==='post'?`${e.home?e.gf:e.ga} - ${e.home?e.ga:e.gf}`:e.state==='in'?`${e.home?e.gf:e.ga}-${e.home?e.ga:e.gf}`:fmtTime(e.date);
+  const tag=`${tvHtml(e)}<span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':cmp===true?'':'<span style="width:26px"></span>'}`;
   return`<div class="row${cmp===true?' cmp':''}" onclick="openMatch('${e.id}')" role="button" tabindex="0">
-    <div class="d"><b>${esc(fmtDay(e.date))}</b></div>
+    <div class="d"><b>${esc(fmtDay(e.date))}</b>${cmp===true?`<div class="dx">${tag}</div>`:''}</div>
     <div class="m"><div class="t r"><span>${esc(l[0])}</span>${crest(li[0])}</div><div class="s ${e.state==='pre'?'nx':''}">${esc(mid)}</div><div class="t">${crest(li[1])}<span>${esc(l[1])}</span></div></div>
-    <div>${tvHtml(e)}<span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
+    ${cmp===true?'':`<div>${tag}</div>`}</div>`;
 }
 function renderUp(){
   const u=upcoming().slice(0,5);
