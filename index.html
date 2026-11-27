@@ -236,6 +236,9 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .nlist .im{aspect-ratio:16/10;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran))}
 .nlist .im img{width:100%;height:100%;object-fit:cover}
 .noimg{width:100%;height:100%;display:grid;place-items:center;text-align:center;padding:6px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.9);background:repeating-linear-gradient(90deg,rgba(0,77,152,.9) 0 18px,rgba(165,0,68,.9) 18px 36px)}
+.igbtn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;color:#fff;background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);box-shadow:0 6px 18px rgba(220,39,67,.35);transition:.15s}
+.igbtn:hover{transform:translateY(-2px)}
+.igbtn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
 .nlist b{font-size:14px;line-height:1.3;display:block}
 .nlist span{font-size:11px;color:var(--mut)}
 .nlist a:hover b{color:var(--or)}
@@ -380,6 +383,7 @@ footer b{color:var(--txt)}
  <section class="view" id="v-videos">
   <div class="sec-title">Vídeos</div><div class="sec-sub">Resums, gols i contingut del club. Del canal oficial del club i, quan parlen del Barça, de LALIGA EA SPORTS, SPORT, Mundo Deportivo i Jijantes (Gerard Romero).</div>
   <div class="card" style="margin-bottom:18px"><h2>Resums i gols dels últims partits</h2><div id="recap"></div></div>
+  <div style="margin-bottom:16px"><a class="igbtn" href="https://www.instagram.com/fcbarcelona/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="#fff"/></svg>@fcbarcelona a Instagram ↗</a></div>
   <div class="filters" id="vfilters"></div>
   <div class="vgrid" id="vidGrid"></div>
  </section>
@@ -387,6 +391,7 @@ footer b{color:var(--txt)}
  <!-- NOTÍCIES -->
  <section class="view" id="v-noticies">
   <div class="sec-title">Notícies</div><div class="sec-sub">Titulars de Mundo Deportivo, SPORT, ESPN, premsa catalana i altres mitjans. S'obren a la font original; les de SPORT i la premsa passen per Google Notícies.</div>
+  <div style="margin-bottom:16px"><a class="igbtn" href="https://www.instagram.com/fcbarcelona/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="#fff"/></svg>@fcbarcelona a Instagram ↗</a><span style="color:var(--mut);font-size:12px;margin-left:12px">Actualitat del club (inclou altres seccions). Instagram no permet mostrar-ne les publicacions aquí.</span></div>
   <div class="filters" id="nfilters"></div>
   <div class="news" id="newsGrid"></div>
  </section>
