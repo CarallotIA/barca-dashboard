@@ -118,24 +118,27 @@ main{padding:26px 0 60px}
 .rv .t>span:last-child{min-width:0}
 
 /* Llistes */
-.row{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.12s}
+.row{display:grid;grid-template-columns:112px minmax(0,1fr) 210px;gap:12px;align-items:center;padding:11px 8px;border-bottom:1px solid var(--line);border-radius:8px;cursor:pointer;transition:.12s}
 .row:last-child{border-bottom:0}
 .row:hover{background:var(--card)}
 .row .d{font-size:12px;color:var(--mut);line-height:1.25}
-.row .d b{display:block;color:var(--txt);font-size:13px}
+.row .d b{display:block;color:var(--txt);font-size:13px;white-space:nowrap}
 .row .d b::first-letter{text-transform:uppercase}
 .row .m{display:grid;grid-template-columns:1fr 58px 1fr;gap:10px;align-items:center}
 .row .t{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;min-width:0}
 .row .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row .t.r{justify-content:flex-end;text-align:right}
 .row .t img{width:26px;height:26px;object-fit:contain;flex:none}
+.row>div:last-child{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-end}
+.row.cmp{grid-template-columns:104px minmax(0,1fr)}
+.row.cmp>div:last-child{grid-column:2;justify-content:center}
 .row .s{text-align:center;font-weight:800;font-size:16px;background:rgba(0,0,0,.28);border-radius:8px;padding:3px 0;font-variant-numeric:tabular-nums}
 .row .s.nx{font-weight:600;font-size:13px;color:var(--mut)}
 .comp{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
 .comp.liga{color:#ffd1e0;border-color:rgba(212,18,95,.55);background:rgba(165,0,68,.25)}
 .comp.ucl{color:#cfe3ff;border-color:rgba(26,111,209,.7);background:rgba(0,77,152,.35)}
 .comp.alt{color:#ffe9a3;border-color:rgba(237,187,0,.4);background:rgba(237,187,0,.1)}
-@media(max-width:640px){.row{grid-template-columns:1fr;gap:6px}.row .m{grid-template-columns:1fr 52px 1fr}}
+@media(max-width:640px){.row,.row.cmp{grid-template-columns:1fr;gap:6px}.row.cmp>div:last-child,.row>div:last-child{grid-column:auto;justify-content:flex-start;flex-wrap:wrap}.row .m{grid-template-columns:1fr 52px 1fr}}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .f{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;color:var(--mut)}
 .f:hover{color:var(--txt)}
@@ -243,7 +246,7 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .tv img{height:24px;width:auto;max-width:76px;display:block;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))}
 .tv.ora img{height:26px}
 .tv.txt{font-size:10px;font-weight:800;color:#0b1220;letter-spacing:.03em}
-.tv.pend{background:transparent;color:var(--mut);font-weight:600;border-style:dashed;font-size:10px;box-shadow:none;height:auto;padding:3px 8px}
+.tv.pend{white-space:nowrap;background:transparent;color:var(--mut);font-weight:600;border-style:dashed;font-size:10px;box-shadow:none;height:auto;padding:3px 8px}
 .tvs{display:inline-flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:center}
 .igbtn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;color:#fff;background:linear-gradient(45deg,#f09433,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888);box-shadow:0 6px 18px rgba(220,39,67,.35);transition:.15s}
 .igbtn:hover{transform:translateY(-2px)}
@@ -737,17 +740,17 @@ function tvHtml(e){
   const logo={dazn:'dazn',mov:'movistar',ora:'orange',yt:'youtube'};
   return`<span class="tvs" title="On veure-ho a Espanya">${l.map(n=>{const c=cls(n);return logo[c]?`<span class="tv ${c}" title="${esc(n)}"><img src="logos/${logo[c]}.svg" alt="${esc(n)}"></span>`:`<span class="tv txt">${esc(n)}</span>`}).join('')}</span>`;
 }
-function matchRow(e){
+function matchRow(e,cmp){
   const l=e.home?['FC Barcelona',e.opp.name]:[e.opp.name,'FC Barcelona'],li=e.home?[TEAM,e.opp.id]:[e.opp.id,TEAM];
   const mid=e.state==='post'?`${e.home?e.gf:e.ga} - ${e.home?e.ga:e.gf}`:e.state==='in'?`${e.home?e.gf:e.ga}-${e.home?e.ga:e.gf}`:fmtTime(e.date);
-  return`<div class="row" onclick="openMatch('${e.id}')" role="button" tabindex="0">
-    <div class="d"><b>${esc(fmtDay(e.date))}</b>${e.state==='post'||e.state==='in'?fmtTime(e.date):''}</div>
+  return`<div class="row${cmp===true?' cmp':''}" onclick="openMatch('${e.id}')" role="button" tabindex="0">
+    <div class="d"><b>${esc(fmtDay(e.date))}</b></div>
     <div class="m"><div class="t r"><span>${esc(l[0])}</span>${crest(li[0])}</div><div class="s ${e.state==='pre'?'nx':''}">${esc(mid)}</div><div class="t">${crest(li[1])}<span>${esc(l[1])}</span></div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${tvHtml(e)}<span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
+    <div>${tvHtml(e)}<span class="comp ${compKey(e.comp)}">${esc(e.comp)}</span>${e.res?`<span class="pill sm ${e.res}">${e.res==='W'?'V':e.res==='L'?'D':'E'}</span>`:e.state==='in'?'<span class="chip live" style="padding:2px 8px">Live</span>':'<span style="width:26px"></span>'}</div></div>`;
 }
 function renderUp(){
   const u=upcoming().slice(0,5);
-  $('#upNext').innerHTML=u.map(matchRow).join('')||'<div class="empty">Cap partit programat.</div>';
+  $('#upNext').innerHTML=u.map(e=>matchRow(e,true)).join('')||'<div class="empty">Cap partit programat.</div>';
 }
 function renderMatches(){
   const comps=[['all','Tots'],['liga','LaLiga'],['ucl','Champions'],['alt','Amistosos i altres']];
@@ -757,7 +760,7 @@ function renderMatches(){
   if(S.mfs==='res')l=l.filter(e=>e.state==='post');else if(S.mfs==='cal')l=l.filter(e=>e.state!=='post');
   const pre=l.filter(e=>e.state!=='post'),post=l.filter(e=>e.state==='post').reverse();
   const ordered=S.mfs==='res'?post:S.mfs==='cal'?pre:[...pre,...post];
-  $('#matchList').innerHTML=ordered.map(matchRow).join('')||'<div class="empty">No hi ha partits amb aquest filtre.</div>';
+  $('#matchList').innerHTML=ordered.map(e=>matchRow(e)).join('')||'<div class="empty">No hi ha partits amb aquest filtre.</div>';
 }
 function renderStandings(){
   const rows=S.sf==='liga'?S.liga:S.ucl;
