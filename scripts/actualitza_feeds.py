@@ -190,11 +190,11 @@ PODS = [
     {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
     {"key": "tercer", "name": "LaTdT · El tercer temps (post-partit)", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
     {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
-    {"key": "tudiras", "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
+    {"key": "tudiras", "keep": 14, "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
     {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},
     {"key": "mitjanit", "name": "El club de la mitjanit", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/8/1/podprograma1218.xml", "site": "https://www.ccma.cat/catradio/el-club-de-la-mitjanit/"},
     {"key": "elbar", "name": "El Bar", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/el-bar/itunestfp", "site": "https://cadenaser.com/programa/el-bar/"},
-    {"key": "totcosta", "name": "Tot costa", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/4/3/podprograma1734.xml", "site": "https://www.ccma.cat/catradio/tot-costa/"},
+    {"key": "totcosta", "keep": 14, "name": "Tot costa", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/4/3/podprograma1734.xml", "site": "https://www.ccma.cat/catradio/tot-costa/"},
 ]
 
 
@@ -230,12 +230,23 @@ def spotify_show(s):
                 continue
             if not cover:
                 cover = next((c["url"] for c in ent.get("relatedEntityCoverArt", []) if c.get("maxWidth") == 300), "")
-            eps.append({"title": plain(ent["title"]), "date": ent["releaseDate"]["isoString"], "dur": _dur(str(int(ent.get("duration", 0) / 1000))),
+            eps.append({"title": plain(ent["title"]), "date": ent["releaseDate"]["isoString"], "sec": int(ent.get("duration", 0) / 1000), "dur": _dur(str(int(ent.get("duration", 0) / 1000))),
                         "spot": i, "link": f"https://open.spotify.com/episode/{i}"})
         except Exception as ex:
             print(f"  ✗ episodi {i}: {ex}")
     eps.sort(key=lambda e: e["date"], reverse=True)
     return {"key": s["key"], "name": s["name"], "net": s["net"], "site": f"https://open.spotify.com/show/{s['id']}", "img": cover, "eps": eps[:4]} if eps else None
+
+
+def _sec(s):
+    s = (s or "").strip()
+    try:
+        if ":" in s:
+            p = [int(x) for x in s.split(":")]
+            return p[0] * 3600 + p[1] * 60 + p[2] if len(p) == 3 else p[0] * 60 + p[1]
+        return int(float(s))
+    except Exception:
+        return 0
 
 
 def pods():
@@ -283,8 +294,8 @@ def pods():
                 date = iso(parsedate_to_datetime(it.findtext("pubDate")))
             except Exception:
                 continue
-            eps.append({"title": title, "date": date, "dur": _dur(it.findtext(ITUNES + "duration")), "audio": enc.get("url"), "link": it.findtext("link") or p["site"]})
-            if len(eps) >= 4:
+            eps.append({"title": title, "date": date, "sec": _sec(it.findtext(ITUNES + "duration")), "dur": _dur(it.findtext(ITUNES + "duration")), "audio": enc.get("url"), "link": it.findtext("link") or p["site"]})
+            if len(eps) >= p.get("keep", 4):
                 break
         if eps:
             out.append({"key": p["key"], "name": p["name"], "net": p["net"], "rss": p["url"], "site": p["site"] or ch.findtext("link") or "",
