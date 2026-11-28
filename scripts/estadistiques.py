@@ -113,7 +113,28 @@ def parse_player(j):
                 continue
             p90 = it.get("per90")
             o["v"][k] = [round(v, 2), round(p90, 2) if isinstance(p90, (int, float)) else None]
+    cells = {}
+    for pt in ((j.get("heatmap") or {}).get("coordinates")) or []:
+        i = min(13, int(pt["y"] // 5)) * 21 + min(20, int(pt["x"] // 5))   # quadrícula 21×14 (cel·les de 5 m) sobre un camp de 105×68
+        cells[i] = cells.get(i, 0) + 1
+    if cells:
+        o["hm"] = [x for i, c in sorted(cells.items()) for x in (i, c)]
     return o if o["v"] or o.get("mp") else None
+
+
+def parse_meta(pd):
+    """Trajectòria, trofeus, valor de mercat i traspassos d'un jugador (playerData)."""
+    car = []
+    for e in (((pd.get("careerHistory") or {}).get("careerItems") or {}).get("senior") or {}).get("teamEntries") or []:
+        car.append([e.get("team"), e.get("teamId"), (e.get("startDate") or "")[:7], (e.get("endDate") or "")[:7] or None,
+                    fnum(e.get("appearances")), fnum(e.get("goals")), fnum(e.get("assists"))])
+    tro = []
+    for tm in (pd.get("trophies") or {}).get("playerTrophies") or []:
+        for tn in tm.get("tournaments") or []:
+            tro.append([tm.get("teamName"), tn.get("leagueName"), tn.get("seasonsWon") or [], tn.get("seasonsRunnerUp") or []])
+    mv = [[(x.get("date") or "")[:7], x.get("value")] for x in (pd.get("marketValues") or {}).get("values") or [] if x.get("value")]
+    tr = [[x.get("fromClub"), x.get("toClub"), x.get("transferDate"), (x.get("fee") or {}).get("value"), bool(x.get("onLoan"))] for x in pd.get("transfers") or []]
+    return {"car": car, "tro": tro, "mv": mv, "tr": tr}
 
 
 def players_block(old_pl, blocks, seasons, squad):
@@ -133,6 +154,7 @@ def players_block(old_pl, blocks, seasons, squad):
         except Exception:
             return pid, (o if o["s"] else None)
         o["n"] = pd.get("name") or o["n"]
+        o.update(parse_meta(pd))
         o["pos"] = squad.get(pid) or pos_group(pd.get("positionDescription")) or o["pos"]
         tmap = {}
         for ss in pd.get("statSeasons") or []:
@@ -141,7 +163,7 @@ def players_block(old_pl, blocks, seasons, squad):
         for season, codes in ids[pid].items():
             for code in codes:
                 have = o["s"].get(season, {}).get(code)
-                if have and season != cur and "force" not in sys.argv:
+                if have and "hm" in have and season != cur and "force" not in sys.argv:
                     continue
                 tid = next(k for k, v in COMPS.items() if v[0] == code)
                 eid = tmap.get((season.replace("/", "/"), tid))
