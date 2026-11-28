@@ -188,6 +188,7 @@ PODS_MAX_AGE = 20 * 60
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
     {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
+    {"key": "tercer", "name": "LaTdT · El tercer temps (post-partit)", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
     {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
     {"key": "tudiras", "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
     {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},
@@ -286,7 +287,7 @@ def pods():
             if len(eps) >= 4:
                 break
         if eps:
-            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "site": p["site"] or ch.findtext("link") or "",
+            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "rss": p["url"], "site": p["site"] or ch.findtext("link") or "",
                         "img": (img.get("href") if img is not None else "") or (ch.findtext("image/url") or ""), "eps": eps})
     if out:
         PODS_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")
