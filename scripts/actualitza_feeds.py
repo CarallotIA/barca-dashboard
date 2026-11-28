@@ -260,32 +260,52 @@ YT_PODS = [{
 
 
 def youtube_pod(c):
+    """Vídeos normals d'un canal: s'agafen de la pestanya «Vídeos» (que ja no porta Shorts ni directes) i es treuen els de la llista a excloure.
+    Les dates exactes vénen de l'RSS del canal. Si la pestanya no es pot llegir, es fa servir l'RSS amb filtres de reserva."""
     ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
     root = ET.fromstring(get("https://www.youtube.com/feeds/videos.xml?channel_id=" + c["channel"]))
-    excl = set()
-    try:
-        page = get("https://www.youtube.com/playlist?list=" + c["exclude_playlist"]).decode("utf-8", "ignore")
-        excl = set(re.findall(r'"videoId":"([\w-]{11})"', page))
-    except Exception as ex:
-        print("  (llista a excloure no disponible:", ex, ")")
-    eps = []
+    rss = {}
     for e in root.findall("a:entry", ns):
         vid = e.findtext("yt:videoId", namespaces=ns)
-        link = (e.find("a:link", ns).get("href") if e.find("a:link", ns) is not None else "")
-        if not vid or "/shorts/" in link or vid in excl:
+        link = e.find("a:link", ns).get("href") if e.find("a:link", ns) is not None else ""
+        rss[vid] = {"title": plain(e.findtext("a:title", namespaces=ns) or ""), "date": iso(datetime.fromisoformat(e.findtext("a:published", namespaces=ns))), "short": "/shorts/" in link}
+    excl = set()
+    try:
+        pg = get("https://www.youtube.com/playlist?list=" + c["exclude_playlist"]).decode("utf-8", "ignore")
+        excl = set(re.findall(r'"videoId":"([\w-]{11})"', pg))
+    except Exception as ex:
+        print("  (llista a excloure no disponible:", ex, ")")
+    tab = []
+    try:
+        pg = get(c["site"]).decode("utf-8", "ignore")
+        tab = list(dict.fromkeys(re.findall(r'"contentId":"([\w-]{11})","contentType":"LOCKUP_CONTENT_TYPE_VIDEO"', pg)))
+    except Exception as ex:
+        print("  (pestanya Vídeos no disponible:", ex, ")")
+    print(f"  · pestanya Vídeos: {len(tab)} ids · llista exclosa: {len(excl)} ids · RSS: {len(rss)}")
+    if tab:
+        order = [v for v in tab if v in rss]
+        live_check = False
+    else:      # reserva: RSS sense Shorts, comprovant cada vídeo (directes) a la seva pàgina
+        order = list(rss)
+        live_check = True
+    eps = []
+    for vid in order:
+        r = rss[vid]
+        if r["short"] or vid in excl:
             continue
+        sec = 0
         try:
             h = get("https://www.youtube.com/watch?v=" + vid).decode("utf-8", "ignore")
+            m = re.search(r'"lengthSeconds":"(\d+)"', h)
+            sec = int(m.group(1)) if m else 0
+            if live_check and (re.search(r'"isLiveContent":true', h) or not m):
+                continue
         except Exception:
+            if live_check:
+                continue
+        if sec and sec < 70:
             continue
-        if re.search(r'"isLiveContent":true', h):      # emissions en directe i les seves reemissions
-            continue
-        m = re.search(r'"lengthSeconds":"(\d+)"', h)
-        sec = int(m.group(1)) if m else 0
-        if sec and sec < 70:                           # clips verticals de menys d'un minut (Shorts sense etiquetar)
-            continue
-        eps.append({"title": plain(e.findtext("a:title", namespaces=ns) or ""), "date": iso(datetime.fromisoformat(e.findtext("a:published", namespaces=ns))),
-                    "sec": sec, "dur": _dur(str(sec)), "yt": vid, "link": "https://www.youtube.com/watch?v=" + vid})
+        eps.append({"title": r["title"], "date": r["date"], "sec": sec, "dur": _dur(str(sec)) if sec else "", "yt": vid, "link": "https://www.youtube.com/watch?v=" + vid})
         if len(eps) >= 4:
             break
     return {"key": c["key"], "kind": "yt", "name": c["name"], "net": c["net"], "site": c["site"], "img": c["img"], "eps": eps} if eps else None
@@ -306,7 +326,7 @@ def pods():
     out = []
     for c in YT_PODS:
         try:
-            r = youtube_pod(c)
+            r = youtube_pod(c) or next((x for x in (old or {}).get("pods", []) if x["key"] == c["key"]), None)
             if r:
                 out.append(r)
         except Exception as ex:
