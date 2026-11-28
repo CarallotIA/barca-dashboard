@@ -185,6 +185,7 @@ def pstats():
 ITUNES = "{http://www.itunes.com/dtds/podcast-1.0.dtd}"
 PODS_FILE = DATA / "pods.json"
 PODS_MAX_AGE = 20 * 60
+PODS_SCHEMA = 3  # puja aquest número quan canvien els camps: invalida la memòria cau
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
     {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
@@ -249,12 +250,53 @@ def _sec(s):
         return 0
 
 
+# Canals de YouTube dins de Podcasts: només vídeos normals (ni Shorts, ni directes, ni els de la llista indicada).
+YT_PODS = [{
+    "key": "gerard", "name": "Gerard Romero · Jijantes", "net": "YouTube · només vídeos curts (sense directes ni Shorts)",
+    "channel": "UC0Cbaofl1u2ZSCUjZ9yy-wg", "site": "https://www.youtube.com/@GerardRomerotv/videos",
+    "img": "https://yt3.googleusercontent.com/1jxaHxZeE4bS01S1wGdRpkR_4vPpvstqTPUoViCqZ5W6jO7HF0eBR_nkBjzGCAy65fO-sggX=s240-c-k-c0x00ffffff-no-rj",
+    "exclude_playlist": "PLQ5b-oWwCal8oRBZTgS1cDAzeyl7ZWFIA",   # «Todos los directos»
+}]
+
+
+def youtube_pod(c):
+    ns = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015"}
+    root = ET.fromstring(get("https://www.youtube.com/feeds/videos.xml?channel_id=" + c["channel"]))
+    excl = set()
+    try:
+        page = get("https://www.youtube.com/playlist?list=" + c["exclude_playlist"]).decode("utf-8", "ignore")
+        excl = set(re.findall(r'"videoId":"([\w-]{11})"', page))
+    except Exception as ex:
+        print("  (llista a excloure no disponible:", ex, ")")
+    eps = []
+    for e in root.findall("a:entry", ns):
+        vid = e.findtext("yt:videoId", namespaces=ns)
+        link = (e.find("a:link", ns).get("href") if e.find("a:link", ns) is not None else "")
+        if not vid or "/shorts/" in link or vid in excl:
+            continue
+        try:
+            h = get("https://www.youtube.com/watch?v=" + vid).decode("utf-8", "ignore")
+        except Exception:
+            continue
+        if re.search(r'"isLiveContent":true', h):      # emissions en directe i les seves reemissions
+            continue
+        m = re.search(r'"lengthSeconds":"(\d+)"', h)
+        sec = int(m.group(1)) if m else 0
+        if sec and sec < 70:                           # clips verticals de menys d'un minut (Shorts sense etiquetar)
+            continue
+        eps.append({"title": plain(e.findtext("a:title", namespaces=ns) or ""), "date": iso(datetime.fromisoformat(e.findtext("a:published", namespaces=ns))),
+                    "sec": sec, "dur": _dur(str(sec)), "yt": vid, "link": "https://www.youtube.com/watch?v=" + vid})
+        if len(eps) >= 4:
+            break
+    return {"key": c["key"], "kind": "yt", "name": c["name"], "net": c["net"], "site": c["site"], "img": c["img"], "eps": eps} if eps else None
+
+
 def pods():
     """Últims episodis de cada programa a partir del seu RSS públic."""
     if PODS_FILE.exists():
         try:
             old = json.loads(PODS_FILE.read_text(encoding="utf-8"))
-            if (datetime.now(timezone.utc) - datetime.fromisoformat(old["generated"].replace("Z", "+00:00"))).total_seconds() < PODS_MAX_AGE:
+            if old.get("v") == PODS_SCHEMA and (datetime.now(timezone.utc) - datetime.fromisoformat(old["generated"].replace("Z", "+00:00"))).total_seconds() < PODS_MAX_AGE:
                 print("  (podcasts recents: es reutilitzen)")
                 return old["pods"]
         except Exception:
@@ -262,6 +304,16 @@ def pods():
     else:
         old = None
     out = []
+    for c in YT_PODS:
+        try:
+            r = youtube_pod(c)
+            if r:
+                out.append(r)
+        except Exception as ex:
+            print(f"  ✗ {c['name']}: {ex}")
+            prev = next((x for x in (old or {}).get("pods", []) if x["key"] == c["key"]), None)
+            if prev:
+                out.append(prev)
     for s in SPOTIFY_SHOWS:
         try:
             r = spotify_show(s)
@@ -301,7 +353,7 @@ def pods():
             out.append({"key": p["key"], "name": p["name"], "net": p["net"], "rss": p["url"], "site": p["site"] or ch.findtext("link") or "",
                         "img": (img.get("href") if img is not None else "") or (ch.findtext("image/url") or ""), "eps": eps})
     if out:
-        PODS_FILE.write_text(json.dumps({"generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")
+        PODS_FILE.write_text(json.dumps({"v": PODS_SCHEMA, "generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")
     print(f"  ✓ {len(out)} programes, {sum(len(x['eps']) for x in out)} episodis")
     return out or (old or {}).get("pods", [])
 
