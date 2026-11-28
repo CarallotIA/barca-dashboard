@@ -628,7 +628,7 @@ function loadFeedsJs(){
 }
 async function loadNews(force){
   const F=await loadFeedsJs();S.feedsMode=!!F;if(F)S.feedsAt=new Date(F.generated);
-  S.ps=F&&F.pstats?F.pstats:null;S.coach=F&&F.coach?F.coach:null;S.pods=F&&F.pods?F.pods:null;if(typeof renderPods==='function')renderPods();S.tv=F&&F.tv?F.tv:null;if(S.all.length){renderMatches();renderHero()}if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
+  S.coach=F&&F.coach?F.coach:null;S.pods=F&&F.pods?F.pods:null;if(typeof renderPods==='function')renderPods();S.tv=F&&F.tv?F.tv:null;if(S.all.length){renderMatches();renderHero()}if(typeof renderCoach==='function')renderCoach();if(typeof renderStats==='function')renderStats();S.bx=F&&F.baixes?F.baixes:null;if(typeof renderOnze==='function')renderOnze();
   const [e,...rs]=await Promise.allSettled([getJson(`${API}/site/v2/sports/soccer/esp.1/news?team=${TEAM}`),...(F?[]:NEWS_SRC.map(s=>cached(s.url,force)))]);
   const out=[];
   if(F)F.news.forEach(n=>out.push({...n,date:new Date(n.date)}));
@@ -948,7 +948,7 @@ async function ensureStats(){
   if(!j){try{const c=JSON.parse(localStorage.getItem('fcbstats'));if(c&&c.v===2)j=c}catch(_){}}
   ST.loading=false;
   if(!j){$('#stBody').innerHTML='<div class="empty">Estadístiques no disponibles ara mateix. Torna-ho a provar d\'aquí una estona.</div>';return}
-  ST.data=j;ST.season=j.seasons[0];renderStatsPage();
+  ST.data=j;ST.season=j.seasons[0];renderStatsPage();if(S.roster.length)renderStats();
 }
 const sLab=s=>s==='all'?'Totes les temporades':s;
 const cName=c=>(ST.data.comps.find(x=>x.code===c)||{}).name||c;
@@ -1120,7 +1120,14 @@ $('#stBody').addEventListener('click',e=>{
 $('#stBody').addEventListener('input',e=>{if(e.target.id==='stQ'){ST.q=e.target.value;const pos=e.target.selectionStart;renderStatsPage();const i=$('#stQ');i.focus();i.setSelectionRange(pos,pos)}});
 $('#mbox').addEventListener('click',e=>{const b=e.target.closest('button[data-sp]');if(!b||!ST.data)return;ST.p[b.dataset.sp]=b.dataset.v;spFix()});
 $('#mbox').addEventListener('change',e=>{const s=e.target.closest('select[data-sp]');if(!s||!ST.data)return;ST.p.season=s.value;spFix()});
+function psFromStats(){   /* regats i % de passades de LaLiga de la temporada en curs (de stats.json); qui no hi ha jugat no hi surt */
+  const D=ST.data,s=D&&D.seasons[0],o={};if(!D)return null;
+  for(const pid in D.players){const p=D.players[pid],e=p.s[s]&&p.s[s].liga;if(!e)continue;const r=rosterOfName(p.n);if(!r||r.jersey==null)continue;const v=e.v,g=k=>v[k]?v[k][0]:null;
+    o[r.jersey]={name:p.n,dr:g('dribbles_succeeded'),drp:g('won_contest_subtitle'),pa:g('successful_passes'),pp:g('successful_passes_accuracy')}}
+  return o;
+}
 function renderStats(){
+  S.ps=psFromStats();
   $('#barDrib').innerHTML=psBars('dr');$('#barPass').innerHTML=psBars('pp');
   $('#goalsChart').innerHTML=goalsChart(played().slice(-12));
   $('#ptsChart').innerHTML=ptsChart();
@@ -1474,7 +1481,7 @@ setInterval(()=>{
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-S.last.m>60e3){loadMatches();loadNews();loadVideos()}});
 
 const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','podcasts','noticies'].includes(h))show(h);
-loadMatches();loadNews();loadVideos();
+loadMatches();loadNews();loadVideos();ensureStats();
 /* Sense connexió o amb senyal dolent: els programes descarregats es mostren de seguida, sense esperar les dades */
 setTimeout(()=>{if(!S.pods)renderPods()},1500);
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{});
