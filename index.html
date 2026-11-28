@@ -6,6 +6,8 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#004D98">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="FC Barcelona · Primer equip">
 <meta property="og:title" content="FC Barcelona · Primer equip">
@@ -270,6 +272,10 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .nowic{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--blau),var(--gran));display:grid;place-items:center;font-size:26px;flex:none}
 .pod.now audio{width:100%}
 .nowhint{font-size:11px;color:var(--mut);margin-top:8px}
+.offbar{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.sw{display:flex;gap:10px;align-items:center;cursor:pointer;flex:1 1 320px}.sw input{width:18px;height:18px;accent-color:var(--gran2);flex:none}
+.offmsg{color:var(--mut);font-size:12px}
+.ep.saved .dl{background:rgba(52,211,153,.18);border-color:rgba(52,211,153,.5);color:var(--win)}
 .pf{display:flex;gap:14px;align-items:center}
 .ep .dl{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;text-decoration:none;color:var(--txt);background:var(--card2);border:1px solid var(--line);font-size:13px}
 .ep .dl:hover{background:rgba(255,255,255,.16)}
@@ -436,6 +442,7 @@ footer b{color:var(--txt)}
  <!-- PODCASTS -->
  <section class="view" id="v-podcasts">
   <div class="sec-title">Podcasts</div><div class="sec-sub">Programes de ràdio i podcast sobre el Barça: els últims episodis, per escoltar-los aquí mateix. S'actualitzen sols.</div>
+  <div class="offbar" id="offBar"></div>
   <div class="grid pgrid" id="podGrid"><div class="skel"></div></div>
  </section>
 
@@ -569,9 +576,10 @@ function loadFeedsJs(){
         let F;
         if(u.endsWith('.js')){F=await new Promise(res=>{const s=document.createElement('script');s.src=u+'?t='+Date.now();s.onload=()=>{s.remove();res(window.FEEDS)};s.onerror=()=>{s.remove();res(null)};document.head.appendChild(s)})}
         else{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store'});if(!r.ok)continue;F=JSON.parse((await r.text()).replace(/^\s*window\.FEEDS\s*=\s*/,'').replace(/;\s*$/,''))}
-        if(F&&F.generated&&Date.now()-new Date(F.generated)<6*3600e3)return F;
+        if(F&&F.generated&&Date.now()-new Date(F.generated)<6*3600e3){try{localStorage.setItem('fcbfeeds',JSON.stringify(F))}catch(_){}return F}
       }catch(_){}
     }
+    try{const c=JSON.parse(localStorage.getItem('fcbfeeds'));if(c&&c.generated&&!navigator.onLine)return c}catch(_){}
     return null;
   })();
 }
@@ -920,18 +928,76 @@ function renderNews(){
 }
 
 /* ======== Podcasts ======== */
+/* ---- Descàrrega automàtica (només programes de Catalunya Ràdio, que permeten baixar l'àudio des del navegador) ----
+   Es guarda NOMÉS l'últim episodi de cada programa, a IndexedDB; l'anterior s'esborra en guardar-ne un de nou. */
+const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('fcb-pods',1);r.onupgradeneeded=()=>r.result.createObjectStore('pods',{keyPath:'key'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+  const tx=async(m,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction('pods',m);const r=fn(t.objectStore('pods'));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})};
+  return{all:()=>tx('readonly',s=>s.getAll()),get:k=>tx('readonly',s=>s.get(k)),put:v=>tx('readwrite',s=>s.put(v)),del:k=>tx('readwrite',s=>s.delete(k))}})();
+const offOK=ep=>{try{return ep.audio&&new URL(ep.audio).hostname.endsWith('3catvideos.cat')}catch(_){return false}};
+const autoOn=()=>{try{return localStorage.getItem('fcbauto')!=='0'}catch(_){return true}};
+const mb=n=>(n/1048576).toFixed(0)+' MB';
+async function renderOffBar(){
+  const el=$('#offBar');if(!el)return;
+  let recs=[];try{recs=await idb.all()}catch(_){}
+  const total=recs.reduce((a,r)=>a+(r.size||0),0),st=S.dl;
+  const msg=st&&st.busy?`Descarregant «${esc(st.name)}»… ${st.pct||0}%`:!navigator.onLine?'Sense connexió: es mostren els episodis descarregats.':recs.length?`${recs.length} episodis desats (${mb(total)}) · sense connexió els trobaràs aquí`:'Encara no hi ha cap episodi descarregat.';
+  el.innerHTML=`<label class="sw"><input type="checkbox" id="autoDl" ${autoOn()?'checked':''}><span>Descàrrega automàtica dels programes de Catalunya Ràdio (només l'últim episodi de cada un, i només amb wifi)</span></label><div class="offmsg">${msg}${recs.length?' <button class="btn" id="offClear" style="padding:3px 10px;font-size:11px">Esborra tot</button>':''}</div>`;
+}
+async function markSaved(){
+  let recs=[];try{recs=await idb.all()}catch(_){return}
+  document.querySelectorAll('#podGrid .ep').forEach(row=>{
+    const p=(S.podsOrdered||[]).find(x=>x.key===row.dataset.k),ep=p&&p.eps[+row.dataset.i],rec=recs.find(r=>r.key===row.dataset.k);
+    const saved=!!(ep&&rec&&rec.audio===ep.audio);row.classList.toggle('saved',saved);
+    const dl=row.querySelector('.dl');if(dl&&saved){dl.textContent='✓';dl.title='Descarregat: el pots escoltar sense connexió';dl.removeAttribute('href');dl.classList.add('ok')}
+  });
+}
+let _dlBusy=false;
+async function autoDl(){
+  if(_dlBusy||!autoOn()||!S.pods||!navigator.onLine||document.visibilityState!=='visible')return;
+  const c=navigator.connection;if(c&&(c.saveData||c.type==='cellular'))return;   // mai amb dades mòbils
+  _dlBusy=true;
+  try{
+    for(const p of S.pods){
+      const ep=[...p.eps].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];if(!ep||!offOK(ep))continue;
+      let rec=null;try{rec=await idb.get(p.key)}catch(_){}
+      if(rec&&rec.audio===ep.audio)continue;
+      S.dl={busy:true,name:p.name,pct:0};renderOffBar();
+      const r=await fetch(ep.audio);if(!r.ok)throw new Error('HTTP '+r.status);
+      const len=+r.headers.get('content-length')||0,rd=r.body.getReader(),parts=[];let got=0;
+      for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);got+=value.length;if(len){const pc=Math.round(got/len*100);if(pc!==S.dl.pct){S.dl.pct=pc;renderOffBar()}}}
+      const blob=new Blob(parts,{type:'audio/mpeg'});
+      await idb.put({key:p.key,name:p.name,net:p.net,title:ep.title,date:ep.date,dur:ep.dur,audio:ep.audio,blob,size:blob.size});   // substitueix l'anterior
+      try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
+      S.dl=null;markSaved();renderOffBar();
+    }
+  }catch(e){console.warn('Descàrrega automàtica aturada:',e)}
+  S.dl=null;_dlBusy=false;renderOffBar();
+}
+document.addEventListener('change',e=>{if(e.target.id==='autoDl'){try{localStorage.setItem('fcbauto',e.target.checked?'1':'0')}catch(_){}if(e.target.checked)autoDl();renderOffBar()}});
+document.addEventListener('click',async e=>{if(e.target.id==='offClear'){if(confirm('Vols esborrar tots els episodis descarregats?')){const rs=await idb.all();for(const r of rs)await idb.del(r.key);markSaved();renderOffBar();document.querySelectorAll('#podGrid .ep.saved').forEach(x=>x.classList.remove('saved'))}}});
+window.addEventListener('online',()=>{autoDl();renderOffBar()});window.addEventListener('offline',renderOffBar);
+
 const NOWCARD='<div class="pod now" id="podNow"><div class="ph2"><div class="nowic">🎧</div><div><b>Ara sona</b><span>Tria un episodi i es reprodueix aquí</span></div></div><div id="nowBody"></div></div>';
-function playPod(ep,p){
+async function playPod(ep,p){
   const box=$('#nowBody');if(!box)return;
   $('#podNow .ph2 b').textContent=ep.title;$('#podNow .ph2 span').textContent=p.name+(p.net?' · '+p.net:'');
   if(ep.spot){
     box.innerHTML=`<iframe title="${esc(ep.title)}" src="https://open.spotify.com/embed/episode/${esc(ep.spot)}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="border-radius:12px;border:0"></iframe><div class="nowhint">Spotify: si no has iniciat sessió, només se sent una mostra de 30 s.</div>`;
-  }else if(safeUrl(ep.audio)){
-    box.innerHTML=`<audio controls autoplay src="${esc(ep.audio)}"></audio>`;
+  }else{
+    let src=safeUrl(ep.audio)?ep.audio:'',saved=false;
+    try{const rec=await idb.get(p.key);if(rec&&rec.audio===ep.audio){if(S.nowUrl)URL.revokeObjectURL(S.nowUrl);S.nowUrl=URL.createObjectURL(rec.blob);src=S.nowUrl;saved=true}}catch(_){}
+    if(src)box.innerHTML=`<audio controls autoplay src="${esc(src)}"></audio>${saved?'<div class="nowhint">▶ Es reprodueix des del dispositiu (sense gastar dades).</div>':''}`;
   }
   $('#podNow').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function renderPods(){
+  const el=$('#podGrid');if(!el)return;
+  if(!S.pods){   // sense dades (p. ex. sense connexió): es mostren els episodis descarregats
+    idb.all().then(rs=>{if(rs.length){S.pods=rs.map(r=>({key:r.key,name:r.name,net:r.net,site:'',eps:[{title:r.title,date:r.date,dur:r.dur,audio:r.audio}]}));renderPodsCore();renderOffBar();markSaved()}}).catch(()=>{});
+  }
+  renderPodsCore();renderOffBar();markSaved();autoDl();
+}
+function renderPodsCore(){
   const el=$('#podGrid');if(!el)return;
   const P=S.pods;
   if(!P||!P.length){el.innerHTML=NOWCARD+'<div class="empty">Podcasts no disponibles ara mateix.</div>';return}
@@ -1095,6 +1161,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now(
 
 const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','podcasts','noticies'].includes(h))show(h);
 loadMatches();loadNews();loadVideos();
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
