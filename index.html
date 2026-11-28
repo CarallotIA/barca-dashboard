@@ -953,7 +953,10 @@ function renderNews(){
 const idb=(()=>{let p;const open=()=>p||(p=new Promise((res,rej)=>{const r=indexedDB.open('fcb-pods',2);r.onupgradeneeded=()=>{const db=r.result;if(db.objectStoreNames.contains('pods'))db.deleteObjectStore('pods');db.createObjectStore('pods',{keyPath:'key'})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
   const tx=async(m,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction('pods',m);const r=fn(t.objectStore('pods'));t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})};
   return{all:()=>tx('readonly',s=>s.getAll()),get:k=>tx('readonly',s=>s.get(k)),put:v=>tx('readwrite',s=>s.put(v)),del:k=>tx('readwrite',s=>s.delete(k))}})();
-const offOK=ep=>{try{return ep.audio&&new URL(ep.audio).hostname.endsWith('3catvideos.cat')}catch(_){return false}};
+const PROXY_HOSTS=['traffic.omny.fm'];   /* RAC1 (Tu diràs): no permet baixar l'àudio des del navegador; es fa passar per /api/audio (intermediari propi) */
+const hostOf=u=>{try{return new URL(u).hostname}catch(_){return ''}};
+const offOK=ep=>{const h=hostOf(ep.audio);return !!ep.audio&&(h.endsWith('3catvideos.cat')||PROXY_HOSTS.includes(h))};
+const dlUrl=ep=>PROXY_HOSTS.includes(hostOf(ep.audio))?'/api/audio?u='+encodeURIComponent(ep.audio):ep.audio;
 const autoOn=()=>{try{return localStorage.getItem('fcbauto')!=='0'}catch(_){return true}};
 const mb=n=>(n/1048576).toFixed(0)+' MB';
 /* Programes que pugen cada part com un episodi (Tot costa 19–20 h + 20–21 h, Tu diràs 22.30 + 23.30 + 0.30…):
@@ -978,7 +981,7 @@ async function renderOffBar(){
   let recs=[];try{recs=await idb.all()}catch(_){}
   const total=recs.reduce((a,r)=>a+(r.size||0),0),st=S.dl;
   const msg=st&&st.busy?`Descarregant «${esc(st.name)}»… ${st.pct||0}%`:!navigator.onLine?'Sense connexió: es mostren els episodis descarregats.':recs.length?`${recs.length} programes desats (${mb(total)}) · sense connexió els trobaràs aquí`:'Encara no hi ha cap episodi descarregat.';
-  el.innerHTML=`<label class="sw"><input type="checkbox" id="autoDl" ${autoOn()?'checked':''}><span>Descàrrega automàtica dels programes de Catalunya Ràdio (només l'última emissió de cada un, i només amb wifi)</span></label><div class="offmsg">${msg}${recs.length?' <button class="btn" id="offClear" style="padding:3px 10px;font-size:11px">Esborra tot</button>':''}</div>`;
+  el.innerHTML=`<label class="sw"><input type="checkbox" id="autoDl" ${autoOn()?'checked':''}><span>Descàrrega automàtica dels programes de Catalunya Ràdio i de Tu diràs (només l'última emissió de cada un, i només amb wifi)</span></label><div class="offmsg">${msg}${recs.length?' <button class="btn" id="offClear" style="padding:3px 10px;font-size:11px">Esborra tot</button>':''}</div>`;
 }
 async function markSaved(){
   let recs=[];try{recs=await idb.all()}catch(_){return}
@@ -1002,7 +1005,7 @@ async function autoDl(){
       for(const e of g.parts){
         n++;const hit=old.find(x=>x.audio===e.audio);if(hit){parts.push(hit);continue}
         S.dl={busy:true,name:p.name+(g.parts.length>1?` (part ${n}/${g.parts.length})`:''),pct:0};renderOffBar();
-        const r=await fetch(e.audio);if(!r.ok)throw new Error('HTTP '+r.status);
+        const r=await fetch(dlUrl(e));if(!r.ok)throw new Error('HTTP '+r.status);
         const len=+r.headers.get('content-length')||0,rd=r.body.getReader(),chunks=[];let got=0;
         for(;;){const {done,value}=await rd.read();if(done)break;chunks.push(value);got+=value.length;if(len){const pc=Math.round(got/len*100);if(pc!==S.dl.pct){S.dl.pct=pc;renderOffBar()}}}
         parts.push({audio:e.audio,sec:e.sec||0,blob:new Blob(chunks,{type:'audio/mpeg'}),size:got});

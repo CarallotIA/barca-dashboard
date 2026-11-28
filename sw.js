@@ -1,5 +1,5 @@
 /* Permet obrir el dashboard sense connexió (carcassa de la web). Els àudios descarregats es guarden a IndexedDB, no aquí. */
-const V = "fcb-shell-v1";
+const V = "fcb-shell-v2";
 const SHELL = ["./", "index.html", "favicon.png", "apple-touch-icon.png", "logos/dazn.svg", "logos/movistar.svg", "logos/orange.svg", "logos/youtube.svg"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
@@ -9,7 +9,7 @@ self.addEventListener("fetch", e => {
   const r = e.request;
   if (r.method !== "GET") return;
   const u = new URL(r.url);
-  if (u.origin !== location.origin) return;           // APIs i imatges externes: sense tocar
+  if (u.origin !== location.origin || u.pathname.startsWith("/api/")) return;   // APIs, àudios i imatges externes: sense tocar (els àudios van a IndexedDB)
   if (r.mode === "navigate") {                          // pàgina: sempre la més nova; sense xarxa, l'última guardada
     e.respondWith(fetch(r).then(res => { const c = res.clone(); caches.open(V).then(ch => ch.put("index.html", c)); return res; })
       .catch(() => caches.match("index.html")));
