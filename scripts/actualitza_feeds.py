@@ -185,7 +185,7 @@ def pstats():
 ITUNES = "{http://www.itunes.com/dtds/podcast-1.0.dtd}"
 PODS_FILE = DATA / "pods.json"
 PODS_MAX_AGE = 20 * 60
-PODS_SCHEMA = 3  # puja aquest número quan canvien els camps: invalida la memòria cau
+PODS_SCHEMA = 4  # puja aquest número quan canvien els camps: invalida la memòria cau
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
     {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
@@ -252,7 +252,7 @@ def _sec(s):
 
 # Canals de YouTube dins de Podcasts: només vídeos normals (ni Shorts, ni directes, ni els de la llista indicada).
 YT_PODS = [{
-    "key": "gerard", "name": "Gerard Romero · Jijantes", "net": "YouTube · només vídeos curts (sense directes ni Shorts)",
+    "key": "gerard", "name": "Jijantes", "net": "Youtube - Gerard Romero",
     "channel": "UC0Cbaofl1u2ZSCUjZ9yy-wg", "site": "https://www.youtube.com/@GerardRomerotv/videos",
     "img": "covers/jijantes.webp",
     "exclude_playlist": "PLQ5b-oWwCal8oRBZTgS1cDAzeyl7ZWFIA",   # «Todos los directos»
