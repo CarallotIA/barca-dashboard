@@ -254,7 +254,7 @@ def _sec(s):
 YT_PODS = [{
     "key": "gerard", "name": "Gerard Romero · Jijantes", "net": "YouTube · només vídeos curts (sense directes ni Shorts)",
     "channel": "UC0Cbaofl1u2ZSCUjZ9yy-wg", "site": "https://www.youtube.com/@GerardRomerotv/videos",
-    "img": "https://yt3.googleusercontent.com/1jxaHxZeE4bS01S1wGdRpkR_4vPpvstqTPUoViCqZ5W6jO7HF0eBR_nkBjzGCAy65fO-sggX=s240-c-k-c0x00ffffff-no-rj",
+    "img": "covers/jijantes.webp",
     "exclude_playlist": "PLQ5b-oWwCal8oRBZTgS1cDAzeyl7ZWFIA",   # «Todos los directos»
 }]
 
