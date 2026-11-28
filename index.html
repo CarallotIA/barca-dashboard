@@ -206,6 +206,23 @@ td.pts{font-weight:900}
 .pm h3{font-size:26px;font-weight:800;line-height:1.1;margin-bottom:6px}
 .bio{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin:12px 0 16px;font-size:13px}
 .bio div{color:var(--mut)}.bio b{display:block;color:var(--txt);font-size:14px}
+.stw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.stw table{min-width:640px}.stw th{cursor:pointer;white-space:nowrap;user-select:none}.stw th.on{color:var(--or)}
+.stw td.pn,.stw th.pn{text-align:left;position:sticky;left:0;background:#0b1a38;z-index:1;white-space:nowrap}
+.stw tbody tr{cursor:pointer}.stw tbody tr:hover td{background:rgba(255,255,255,.04)}.stw tbody tr:hover td.pn{background:#12244a}
+.stw .av{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;margin-right:9px;vertical-align:middle;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran));font-size:11px;font-weight:800}
+.stw .av img{width:100%;height:100%;object-fit:cover;object-position:top}
+.stw td.k{font-weight:800;color:var(--or)}
+.stt{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+.stt>div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stt small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.stt b{display:block;font-size:24px;font-weight:900;margin:4px 0 2px}.stt em{display:block;font-style:normal;font-size:11px;color:var(--mut)}
+.stt .rk{margin-top:7px;height:5px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}.stt .rk i{display:block;height:100%;background:linear-gradient(90deg,var(--blau2),var(--gran2))}
+.stt .rt{font-size:11px;color:var(--or);font-weight:700;margin-top:5px}
+.sth{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:20px 0 8px}
+.spr{display:grid;grid-template-columns:1fr auto auto;gap:0 14px;font-size:13px}
+.spr>span{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}.spr .v{font-weight:800;text-align:right}.spr .p{color:var(--mut);text-align:right;min-width:60px}
+.spr .hd{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
 .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .sgrid.cs{grid-template-columns:repeat(8,minmax(0,1fr))}
 .sgrid div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
@@ -432,7 +449,10 @@ footer b{color:var(--txt)}
 
  <!-- ESTADÍSTIQUES -->
  <section class="view" id="v-estadistiques">
-  <div class="sec-title">Estadístiques</div><div class="sec-sub">Calculades en directe a partir dels resultats i de la fitxa de cada jugador.</div>
+  <div class="sec-title">Estadístiques</div><div class="sec-sub">De l'equip i de cada jugador, per temporada i competició. Font: FotMob (sense puntuacions).</div>
+  <div class="filters" id="stFilters"></div>
+  <div id="stBody"><div class="skel" style="height:220px"></div></div>
+  <div class="sec-title" style="font-size:20px;margin-top:34px">Aquesta temporada, en directe</div><div class="sec-sub">Calculades a partir dels resultats i de la fitxa de cada jugador.</div>
   <div class="grid g2" style="margin-bottom:18px">
    <div class="card"><h2>Gols a favor i en contra · últims 12 partits</h2><div id="goalsChart"></div></div>
    <div class="card"><h2>Punts acumulats · LaLiga</h2><div id="ptsChart"></div></div>
@@ -915,6 +935,191 @@ function psBars(kind){
     return`<div class="hbar" style="cursor:pointer;grid-template-columns:140px 1fr 78px" onclick="openPlayer('${x.p.id}')"><span class="n">${esc(x.p.name)}</span><div class="b"><i style="width:${v/mx*100}%"></i></div><span class="v" style="white-space:nowrap">${kind==='dr'?v+' <small style="color:var(--mut);font-weight:500">('+sub+')</small>':v+'%'}</span></div>`}).join('')
    +`<div class="legend"><span>${kind==='dr'?'Entre parèntesis, % d\'èxit. ':'Només jugadors amb ≥150 passades completades ('+'sense porters). '}Temporada de LaLiga · FotMob</span></div>`;
 }
+/* ======== Estadístiques per temporada i competició (stats.json: equip + jugadors, FotMob) ======== */
+const ST_URLS=['https://raw.githubusercontent.com/CarallotIA/barca-dashboard/data/stats.json','stats.json'];
+const ST={data:null,season:null,comp:'all',mode:'team',view:'resum',per90:false,sort:null,dir:-1,q:'',loading:false,p:{id:null,season:null,comp:'all'}};
+async function ensureStats(){
+  if(ST.data||ST.loading)return;ST.loading=true;
+  let j=null;
+  for(const u of ST_URLS){
+    try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),9000);let r;try{r=await fetch(u+'?t='+Math.floor(Date.now()/600e3),{signal:ac.signal})}finally{clearTimeout(to)}
+      if(!r.ok)continue;const x=await r.json();if(x&&x.v===2&&x.seasons){j=x;try{localStorage.setItem('fcbstats',JSON.stringify(x))}catch(_){}break}}catch(_){}
+  }
+  if(!j){try{const c=JSON.parse(localStorage.getItem('fcbstats'));if(c&&c.v===2)j=c}catch(_){}}
+  ST.loading=false;
+  if(!j){$('#stBody').innerHTML='<div class="empty">Estadístiques no disponibles ara mateix. Torna-ho a provar d\'aquí una estona.</div>';return}
+  ST.data=j;ST.season=j.seasons[0];renderStatsPage();
+}
+const sLab=s=>s==='all'?'Totes les temporades':s;
+const cName=c=>(ST.data.comps.find(x=>x.code===c)||{}).name||c;
+const nf=(v,d=0)=>v==null||isNaN(v)?'–':Number(v).toLocaleString('ca-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+function stPairs(){   /* (temporada, competició) que compleixen el filtre i tenen dades */
+  const D=ST.data,o=[];
+  for(const s of D.seasons){if(ST.season!=='all'&&s!==ST.season)continue;
+    for(const c of D.comps.map(x=>x.code)){if(ST.comp!=='all'&&c!==ST.comp)continue;if((D.team[s]||{})[c]||(D.ids[s]||{})[c])o.push([s,c])}}
+  return o;
+}
+function stCompsOf(season){const D=ST.data,set=new Set();for(const s of D.seasons){if(season!=='all'&&s!==season)continue;for(const c in (D.team[s]||{}))set.add(c);for(const c in (D.ids[s]||{}))set.add(c)}return D.comps.filter(x=>set.has(x.code))}
+function renderStatsPage(){
+  const D=ST.data;if(!D)return;
+  const comps=stCompsOf(ST.season);if(ST.comp!=='all'&&!comps.some(c=>c.code===ST.comp))ST.comp='all';
+  $('#stFilters').innerHTML=`<span style="display:flex;gap:8px;flex:1 0 100%"><button class="f ${ST.mode==='team'?'on':''}" data-m="team">Equip</button><button class="f ${ST.mode==='players'?'on':''}" data-m="players">Jugadors</button></span><select class="search" id="stSeason" aria-label="Temporada" style="margin-left:0">${[...D.seasons,'all'].map(s=>`<option value="${s}" ${s===ST.season?'selected':''}>${sLab(s)}</option>`).join('')}</select>
+   <button class="f ${ST.comp==='all'?'on':''}" data-c="all">Totes</button>${comps.map(c=>`<button class="f ${ST.comp===c.code?'on':''}" data-c="${c.code}">${esc(c.name)}</button>`).join('')}`;
+  $('#stBody').innerHTML=ST.mode==='team'?stTeamHtml():stPlayersHtml();
+}
+/* --- Equip --- */
+const TD=[ /* clau, etiqueta, grup, decimals, subtítol: t = total, a = % d'encert */
+ ['goals_team_match','Gols per partit','Atac',1,'t'],['expected_goals_team','xG (gols esperats)','Atac',1],['ontarget_scoring_att_team','Xuts a porteria per partit','Atac',1],['big_chance_team','Ocasions clares','Atac',0],['big_chance_missed_team','Ocasions clares errades','Atac',0],
+ ['penalty_won_team','Penals aconseguits','Atac',0],['touches_in_opp_box_team','Tocs a l\'àrea rival','Atac',0],['corner_taken_team','Córners','Atac',0],['_set_piece_goals_team','Gols de pilota aturada','Atac',0],
+ ['possession_percentage_team','Possessió (%)','Joc i passades',1],['accurate_pass_team','Passades completades per partit','Joc i passades',1,'a'],['accurate_long_balls_team','Passades llargues per partit','Joc i passades',1,'a'],['accurate_cross_team','Centres completats per partit','Joc i passades',1,'a'],
+ ['goals_conceded_team_match','Gols en contra per partit','Defensa',1,'t'],['clean_sheet_team','Porteries a zero','Defensa',0],['expected_goals_conceded_team','xG en contra','Defensa',1],['_xg_diff_team','Diferència de xG','Defensa',1],
+ ['interception_team','Intercepcions per partit','Defensa',1,'t'],['total_tackle_team','Entrades per partit','Defensa',1,'t'],['effective_clearance_team','Rebutjos per partit','Defensa',1,'t'],['poss_won_att_3rd_team','Recuperacions al camp rival per partit','Defensa',1,'t'],['saves_team','Aturades per partit','Defensa',1,'t'],['_set_piece_goals_conceded_team','Gols encaixats de pilota aturada','Defensa',0],
+ ['fk_foul_lost_team','Faltes per partit','Disciplina',1],['total_yel_card_team','Targetes grogues','Disciplina',0],['total_red_card_team','Targetes vermelles','Disciplina',0]];
+const ord=n=>n+(n===1?'r':n===2?'n':n===3?'r':'è');
+function recSum(pairs){const r={pj:0,v:0,e:0,d:0,gf:0,gc:0};for(const [s,c] of pairs){const x=((ST.data.rec||{})[s]||{})[c];if(x)for(const k in r)r[k]+=x[k]}return r}
+function recTiles(r){
+  if(!r.pj)return'<div class="empty">Sense partits jugats.</div>';
+  const dg=r.gf-r.gc;
+  return`<div class="stt">${[['Partits',r.pj,''],['Victòries',r.v,Math.round(r.v/r.pj*100)+'%'],['Empats',r.e,''],['Derrotes',r.d,''],['Gols a favor',r.gf,nf(r.gf/r.pj,2)+' per partit'],['Gols en contra',r.gc,nf(r.gc/r.pj,2)+' per partit'],['Diferència',(dg>0?'+':'')+dg,'']].map(([k,v,s])=>`<div><small>${k}</small><b>${v}</b><em>${s||'&nbsp;'}</em></div>`).join('')}</div>`;
+}
+function stTeamHtml(){
+  const D=ST.data,pairs=stPairs();
+  if(!pairs.length)return'<div class="empty">Sense dades per a aquesta selecció.</div>';
+  let h=`<div class="sth" style="margin-top:4px">Resultats · ${sLab(ST.season)} · ${ST.comp==='all'?'totes les competicions':esc(cName(ST.comp))}</div>`+recTiles(recSum(pairs));
+  if(pairs.length===1){
+    const [s,c]=pairs[0],tm=(D.team[s]||{})[c]||{};
+    for(const g of ['Atac','Joc i passades','Defensa','Disciplina']){
+      const l=TD.filter(x=>x[2]===g&&tm[x[0]]);if(!l.length)continue;
+      h+=`<div class="sth">${g}</div><div class="stt">`+l.map(([k,lab,,d,sub])=>{
+        const [v,sv,rk,n]=tm[k];
+        const sb=sub==='t'&&sv?nf(sv,0)+' en total':sub==='a'&&sv?nf(sv,1)+'% d\'encert':'';
+        return`<div title="Posició al rànquing de ${n} equips de la competició"><small>${lab}</small><b>${nf(v,d)}</b><em>${sb||'&nbsp;'}</em><div class="rk"><i style="width:${(n-rk+1)/n*100}%"></i></div><div class="rt">${ord(rk)} de ${n}</div></div>`}).join('')+'</div>';
+    }
+    h+=`<div class="legend" style="margin-top:12px"><span>La barra i la posició són el lloc que ocupa el Barça entre els equips de la competició per a cada estadística (segons l'ordre del rànquing de FotMob).</span></div>`;
+  }else{
+    const key=['goals_team_match','goals_conceded_team_match','possession_percentage_team','expected_goals_team','clean_sheet_team','accurate_pass_team'],lab=['Gols/partit','Gols en contra/partit','Possessió %','xG','Porteries a zero','Passades compl./partit'],dd=[1,1,1,1,0,0];
+    h+=`<div class="sth">Comparativa</div><div class="stw"><table><thead><tr><th class="pn">Temporada · competició</th><th>PJ</th><th>V-E-D</th>${lab.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`+pairs.map(([s,c])=>{
+      const tm=(D.team[s]||{})[c]||{},r=((D.rec||{})[s]||{})[c]||{};
+      return`<tr data-s="${s}" data-c="${c}" class="stcmp"><td class="pn">${s} · ${esc(cName(c))}</td><td>${r.pj??'–'}</td><td>${r.pj?`${r.v}-${r.e}-${r.d}`:'–'}</td>${key.map((k,i)=>`<td>${tm[k]?nf(tm[k][0],dd[i]):'–'}</td>`).join('')}</tr>`}).join('')+`</tbody></table></div><div class="legend" style="margin-top:10px"><span>Toca una fila per veure'n tot el detall.</span></div>`;
+  }
+  return h;
+}
+/* --- Jugadors --- */
+const PD={ /* clau: [etiqueta, tipus (n recompte, x decimal, p percentatge, m màxim, d distància), secció, parella (per als %)] */
+ goals:['Gols','n','Atac'],expected_goals:['xG','x','Atac'],expected_goals_on_target:['xGOT (xG a porteria)','x','Atac'],non_penalty_xg:['xG sense penals','x','Atac'],shots:['Xuts','n','Atac'],ShotsOnTarget:['Xuts a porteria','n','Atac'],headed_shots:['Xuts de cap','n','Atac'],goals_subtitle:['Gols de penal','n','Atac'],
+ assists:['Assistències','n','Passades i creació'],expected_assists:['xA','x','Passades i creació'],successful_passes:['Passades completades','n','Passades i creació'],successful_passes_accuracy:['% de passades','p','Passades i creació','successful_passes'],long_balls_accurate:['Passades llargues completades','n','Passades i creació'],long_ball_succeeeded_accuracy:['% de passades llargues','p','Passades i creació','long_balls_accurate'],line_breaking_passes:['Passades que trenquen línies','n','Passades i creació'],chances_created:['Ocasions creades','n','Passades i creació'],big_chance_created_team_title:['Ocasions clares creades','n','Passades i creació'],crosses_succeeeded:['Centres completats','n','Passades i creació'],crosses_succeeeded_accuracy:['% de centres','p','Passades i creació','crosses_succeeeded'],
+ dribbles_succeeded:['Regats completats','n','Possessió'],won_contest_subtitle:['% de regats','p','Possessió','dribbles_succeeded'],duel_won:['Duels guanyats','n','Possessió'],duel_won_percent:['% de duels guanyats','p','Possessió','duel_won'],aerials_won:['Duels aeris guanyats','n','Possessió'],aerials_won_percent:['% de duels aeris','p','Possessió','aerials_won'],touches:['Tocs de pilota','n','Possessió'],touches_opp_box:['Tocs a l\'àrea rival','n','Possessió'],dispossessed:['Pilotes perdudes','n','Possessió'],fouls_won:['Faltes rebudes','n','Possessió'],penalty_won_title:['Penals aconseguits','n','Possessió'],
+ defensive_actions:['Accions defensives','n','Defensa'],'matchstats.headers.tackles':['Entrades','n','Defensa'],interceptions:['Intercepcions','n','Defensa'],recoveries:['Recuperacions','n','Defensa'],poss_won_att_3rd_team_title:['Recuperacions al camp rival','n','Defensa'],dribbled_past:['Regatejat','n','Defensa'],clearances:['Rebutjos','n','Defensa'],fouls:['Faltes comeses','n','Defensa'],clean_sheet_team_title:['Partits sense encaixar (en pista)','n','Defensa'],goals_conceded_while_on_pitch:['Gols encaixats (en pista)','n','Defensa'],expected_goals_against_while_on_pitch:['xG en contra (en pista)','x','Defensa'],
+ saves:['Aturades','n','Porteria'],save_percentage:['% d\'aturades','p','Porteria','saves'],goals_conceded:['Gols encaixats','n','Porteria'],goals_prevented:['Gols evitats','x','Porteria'],error_led_to_goal:['Errors que acaben en gol','n','Porteria'],keeper_sweeper:['Sortides com a líbero','n','Porteria'],keeper_high_claim:['Centres atrapats','n','Porteria'],
+ yellow_cards:['Targetes grogues','n','Disciplina'],red_cards:['Targetes vermelles','n','Disciplina'],
+ physical_metrics_topspeed:['Velocitat màxima','m','Físic'],physical_metrics_distance_covered:['Distància recorreguda','d','Físic'],physical_metrics_walking:['Caminant','d','Físic'],physical_metrics_jogging:['Trotant','d','Físic'],physical_metrics_running:['Corrent','d','Físic'],physical_metrics_sprinting:['Esprintant','d','Físic'],physical_metrics_number_of_sprints:['Esprints','n','Físic']};
+for(const k in PD){const a=PD[k];PD[k]={l:a[0],k:a[1],s:a[2],pair:a[3]}}
+PD.clean_sheet_team_title.gk='Porteries a zero';
+const SPEC={_mp:'Partits',_st:'Titular',_min:'Minuts'};
+function fmtV(k,v,p90){
+  if(v==null)return'–';const d=PD[k];if(!d)return nf(v,0);
+  if(d.k==='p')return nf(v,1)+'%';if(d.k==='m')return nf(v,1)+' km/h';
+  if(d.k==='d')return p90?nf(v/1000,2)+' km':nf(v/1000,1)+' km';
+  if(d.k==='x')return nf(v,2);return nf(v,p90?2:0);
+}
+function aggP(p,ents){
+  const o={mp:0,st:0,min:0,v:{}},acc={};let any=false;
+  for(const [s,c] of ents){const e=p.s[s]&&p.s[s][c];if(!e)continue;any=true;o.mp+=e.mp||0;o.st+=e.st||0;o.min+=e.min||0;
+    for(const k in e.v){const val=e.v[k][0],d=PD[k];
+      if(d&&d.k==='p'){const b=e.v[d.pair];if(b&&val>0){const a=acc[k]||(acc[k]={n:0,d:0});a.n+=b[0];a.d+=b[0]/val*100}}
+      else if(d&&d.k==='m')o.v[k]=Math.max(o.v[k]||0,val);
+      else o.v[k]=(o.v[k]||0)+val}}
+  for(const k in acc)o.v[k]=acc[k].d?acc[k].n/acc[k].d*100:null;
+  return any?o:null;
+}
+const val90=(k,o)=>{const d=PD[k];if(!d||d.k==='p'||d.k==='m')return o.v[k];return o.min>0&&o.v[k]!=null?o.v[k]/o.min*90:null};
+const STV={
+ resum:['Resum',['_mp','_st','_min','goals','assists','expected_goals','expected_assists','shots','yellow_cards','red_cards']],
+ atac:['Atac',['goals','expected_goals','expected_goals_on_target','shots','ShotsOnTarget','assists','expected_assists','chances_created','dribbles_succeeded','touches_opp_box']],
+ pas:['Passades',['successful_passes','successful_passes_accuracy','long_balls_accurate','line_breaking_passes','crosses_succeeeded','chances_created','big_chance_created_team_title','assists','expected_assists']],
+ def:['Defensa',['defensive_actions','matchstats.headers.tackles','interceptions','recoveries','clearances','duel_won','duel_won_percent','aerials_won','fouls','dribbled_past']],
+ gk:['Porters',['saves','save_percentage','goals_conceded','goals_prevented','clean_sheet_team_title','keeper_sweeper','keeper_high_claim','successful_passes','successful_passes_accuracy']],
+ fis:['Físic',['physical_metrics_topspeed','physical_metrics_distance_covered','physical_metrics_number_of_sprints','physical_metrics_sprinting','physical_metrics_running']]};
+function stRows(){
+  const D=ST.data,pairs=stPairs(),rows=[];
+  for(const pid in D.players){const p=D.players[pid],o=aggP(p,pairs);if(!o||(!o.min&&!o.mp))continue;rows.push({pid,p,o})}
+  return rows;
+}
+const rosterOfName=n=>{const a=norm(n);let r=S.roster.find(x=>norm(x.name)===a);if(r)return r;const l=a.split(' ').pop(),i=a[0];return S.roster.find(x=>{const b=norm(x.name);return b.split(' ').pop()===l&&b[0]===i})||null};
+const avHtml=(pid,name)=>{const r=rosterOfName(name),src=r&&r.photo&&safeUrl(r.photo)?r.photo:`https://images.fotmob.com/image_resources/playerimages/${pid}.png`;
+  return`<span class="av"><img src="${esc(src)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${esc((name||'?')[0])}'"></span>`};
+function stPlayersHtml(){
+  let rows=stRows();
+  if(!rows.length)return'<div class="empty">Sense dades de jugadors per a aquesta selecció.</div>';
+  const keeper=r=>r.p.pos==='G';
+  if(ST.view==='gk')rows=rows.filter(keeper);else rows=rows.filter(r=>!keeper(r));
+  if(ST.view==='fis')rows=rows.filter(r=>r.o.v.physical_metrics_distance_covered!=null||r.o.v.physical_metrics_topspeed!=null);
+  const cols=STV[ST.view][1];
+  const cv=(r,k)=>k[0]==='_'?(k==='_mp'?r.o.mp:k==='_st'?r.o.st:r.o.min):(ST.per90?val90(k,r.o):r.o.v[k]);
+  if(!ST.sort||!cols.includes(ST.sort))ST.sort=cols.includes('goals')?'goals':cols.includes('saves')?'saves':cols[0];
+  const q=norm(ST.q);if(q)rows=rows.filter(r=>norm(r.p.n).includes(q));
+  rows.sort((a,b)=>{const x=cv(a,ST.sort),y=cv(b,ST.sort);return((y??-1e9)-(x??-1e9))*(-ST.dir)||(b.o.min-a.o.min)});
+  const lab=k=>SPEC[k]||(k==='clean_sheet_team_title'&&ST.view==='gk'?PD[k].gk:PD[k].l);
+  const nopu=k=>k[0]==='_'||(PD[k]&&(PD[k].k==='p'||PD[k].k==='m'));
+  return`<div class="filters"><span style="display:flex;gap:6px;flex-wrap:wrap">${Object.entries(STV).map(([k,v])=>`<button class="f ${ST.view===k?'on':''}" data-v="${k}">${v[0]}</button>`).join('')}</span>
+   <button class="f ${ST.per90?'on':''}" data-p90="1" title="Mostra les estadístiques per cada 90 minuts jugats">Per 90 min</button>
+   <input class="search" id="stQ" placeholder="Cerca jugador…" value="${esc(ST.q)}" aria-label="Cerca jugador"></div>
+   <div class="stw"><table><thead><tr><th class="pn">Jugador</th>${cols.map(k=>`<th data-k="${k}" class="${ST.sort===k?'on':''}">${lab(k)}${ST.sort===k?(ST.dir<0?' ↓':' ↑'):''}</th>`).join('')}</tr></thead><tbody>`+
+   (rows.map(r=>`<tr data-pid="${r.pid}"><td class="pn">${avHtml(r.pid,r.p.n)}${esc(r.p.n)}</td>${cols.map(k=>`<td class="${ST.sort===k?'k':''}">${k[0]==='_'?nf(cv(r,k),0):fmtV(k,cv(r,k),ST.per90&&!nopu(k))}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length+1}" class="empty">${ST.view==='fis'?'Les dades físiques (distància, velocitat, esprints) només es publiquen per a algunes competicions, com la Champions.':'Cap jugador amb dades en aquesta vista.'}</td></tr>`)+
+   `</tbody></table></div><div class="legend" style="margin-top:10px"><span>Toca un jugador per veure'n la fitxa completa. Toca una columna per ordenar${ST.per90?' · valors per cada 90 minuts (els % i la velocitat no canvien)':''}.</span></div>`;
+}
+/* --- Fitxa de jugador (a la manera de FotMob, amb l'estil del dashboard) --- */
+function statPlayerHtml(){
+  const D=ST.data,P=ST.p,p=D.players[P.id];if(!p)return'';
+  const pairs=[];for(const s of D.seasons){if(P.season!=='all'&&s!==P.season)continue;for(const c in (p.s[s]||{}))if(P.comp==='all'||P.comp===c)pairs.push([s,c])}
+  const o=aggP(p,pairs),gk=p.pos==='G',r=rosterOfName(p.n);
+  const seasons=D.seasons.filter(s=>p.s[s]),comps=[...new Set(seasons.filter(s=>P.season==='all'||s===P.season).flatMap(s=>Object.keys(p.s[s])))];
+  const secs=gk?['Porteria','Passades i creació','Disciplina']:['Atac','Passades i creació','Possessió','Defensa','Disciplina','Físic'];
+  let h=`<div class="pm" style="grid-template-columns:96px 1fr"><div><div class="av" style="width:96px;height:96px;border-radius:18px;font-size:30px;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran))"><img src="${esc(r&&r.photo&&safeUrl(r.photo)?r.photo:'https://images.fotmob.com/image_resources/playerimages/'+P.id+'.png')}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:top" onerror="this.remove()"></div></div>
+   <div><small style="color:var(--or);letter-spacing:.2em;font-weight:700;text-transform:uppercase;font-size:11px">${POS[p.pos]||''}${r&&r.jersey!=null?' · #'+r.jersey:''}</small><h3>${esc(p.n)}</h3></div></div>
+   <div class="filters" style="margin-top:14px"><select class="search" data-sp="season" aria-label="Temporada" style="margin-left:0">${[...seasons,'all'].map(s=>`<option value="${s}" ${s===P.season?'selected':''}>${sLab(s)}</option>`).join('')}</select>
+   <button class="f ${P.comp==='all'?'on':''}" data-sp="comp" data-v="all">Totes</button>${comps.map(c=>`<button class="f ${P.comp===c?'on':''}" data-sp="comp" data-v="${c}">${esc(cName(c))}</button>`).join('')}</div>`;
+  if(!o)return h+'<div class="empty">Sense dades per a aquesta selecció.</div>';
+  const top=[['Partits',o.mp],['Titular',o.st],['Minuts',o.min],...(gk?[['Gols encaixats',o.v.goals_conceded],['Porteries a zero',o.v.clean_sheet_team_title]]:[['Gols',o.v.goals],['Assistències',o.v.assists]])];
+  h+=`<div class="sgrid" style="grid-template-columns:repeat(5,minmax(0,1fr))">${top.map(([k,v])=>`<div><b>${nf(v||0,0)}</b><small>${k}</small></div>`).join('')}</div>`;
+  for(const sec of secs){
+    const ks=Object.keys(PD).filter(k=>PD[k].s===sec&&o.v[k]!=null&&!(sec==='Passades i creació'&&gk&&!['successful_passes','successful_passes_accuracy','long_balls_accurate','long_ball_succeeeded_accuracy'].includes(k)));
+    if(!ks.length)continue;
+    h+=`<div class="sth">${gk&&sec==='Passades i creació'?'Distribució':sec}</div><div class="spr"><span class="hd">Estadística</span><span class="hd p">Total</span><span class="hd p">Per 90'</span>`+
+     ks.map(k=>{const d=PD[k],nop=d.k==='p'||d.k==='m',v90=val90(k,o);return`<span>${gk&&k==='clean_sheet_team_title'?d.gk:d.l}</span><span class="v">${fmtV(k,o.v[k])}</span><span class="p">${nop?'':fmtV(k,v90,true)}</span>`}).join('')+'</div>';
+  }
+  if(seasons.length>1||P.season==='all'){
+    h+=`<div class="sth">Evolució per temporada${P.comp==='all'?'':' · '+esc(cName(P.comp))}</div><div class="stw"><table><thead><tr><th class="pn">Temporada</th><th>PJ</th><th>Min</th>${gk?'<th>Gols enc.</th><th>Aturades</th>':'<th>Gols</th><th>Ass.</th><th>xG</th><th>xA</th>'}</tr></thead><tbody>`+
+     seasons.map(s=>{const q=aggP(p,Object.keys(p.s[s]).filter(c=>P.comp==='all'||c===P.comp).map(c=>[s,c]));if(!q)return'';
+      return`<tr style="cursor:default"><td class="pn">${s}</td><td>${q.mp}</td><td>${nf(q.min)}</td>${gk?`<td>${nf(q.v.goals_conceded||0)}</td><td>${nf(q.v.saves||0)}</td>`:`<td>${nf(q.v.goals||0)}</td><td>${nf(q.v.assists||0)}</td><td>${nf(q.v.expected_goals||0,1)}</td><td>${nf(q.v.expected_assists||0,1)}</td>`}</tr>`}).join('')+'</tbody></table></div>';
+  }
+  return h+`<div class="legend" style="margin-top:12px"><span>Font: FotMob. Les competicions amb poc minutatge poden tenir menys estadístiques.</span></div>`;
+}
+function openStatPlayer(pid,season,comp){
+  const D=ST.data;if(!D||!D.players[pid])return;
+  ST.p={id:pid,season:season||ST.season||D.seasons[0],comp:comp||ST.comp||'all'};
+  const p=D.players[pid];if(ST.p.season!=='all'&&!p.s[ST.p.season]){ST.p.season=D.seasons.find(s=>p.s[s])||'all'}
+  if(ST.p.comp!=='all'&&!(ST.p.season==='all'?Object.values(p.s).some(x=>x[ST.p.comp]):(p.s[ST.p.season]||{})[ST.p.comp]))ST.p.comp='all';
+  openModal(`<div id="spBody">${statPlayerHtml()}</div>`);
+}
+async function openStatPlayerByName(name){
+  await ensureStats();const D=ST.data;if(!D)return;const a=norm(name),l=a.split(' ').pop();
+  const pid=Object.keys(D.players).find(i=>norm(D.players[i].n)===a)||Object.keys(D.players).find(i=>{const b=norm(D.players[i].n);return b.split(' ').pop()===l&&b[0]===a[0]});
+  if(pid){closeModal();openStatPlayer(pid,D.seasons[0],'all')}
+}
+const spFix=()=>{const p=ST.data.players[ST.p.id];if(ST.p.comp!=='all'&&!(ST.p.season==='all'?Object.values(p.s).some(x=>x[ST.p.comp]):(p.s[ST.p.season]||{})[ST.p.comp]))ST.p.comp='all';$('#spBody').innerHTML=statPlayerHtml()};
+$('#stFilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.c){ST.comp=b.dataset.c}else if(b.dataset.m){ST.mode=b.dataset.m}renderStatsPage()});
+$('#stFilters').addEventListener('change',e=>{if(e.target.id==='stSeason'){ST.season=e.target.value;renderStatsPage()}});
+$('#stBody').addEventListener('click',e=>{
+  const th=e.target.closest('th[data-k]');if(th){if(ST.sort===th.dataset.k)ST.dir=-ST.dir;else{ST.sort=th.dataset.k;ST.dir=-1}renderStatsPage();return}
+  const b=e.target.closest('button');
+  if(b){if(b.dataset.v){ST.view=b.dataset.v;ST.sort=null;renderStatsPage()}else if(b.dataset.p90){ST.per90=!ST.per90;renderStatsPage()}return}
+  const tr=e.target.closest('tr[data-pid]');if(tr){openStatPlayer(tr.dataset.pid,ST.season,ST.comp);return}
+  const rc=e.target.closest('tr.stcmp');if(rc){ST.season=rc.dataset.s;ST.comp=rc.dataset.c;renderStatsPage();window.scrollTo({top:0})}
+});
+$('#stBody').addEventListener('input',e=>{if(e.target.id==='stQ'){ST.q=e.target.value;const pos=e.target.selectionStart;renderStatsPage();const i=$('#stQ');i.focus();i.setSelectionRange(pos,pos)}});
+$('#mbox').addEventListener('click',e=>{const b=e.target.closest('button[data-sp]');if(!b||!ST.data)return;ST.p[b.dataset.sp]=b.dataset.v;spFix()});
+$('#mbox').addEventListener('change',e=>{const s=e.target.closest('select[data-sp]');if(!s||!ST.data)return;ST.p.season=s.value;spFix()});
 function renderStats(){
   $('#barDrib').innerHTML=psBars('dr');$('#barPass').innerHTML=psBars('pp');
   $('#goalsChart').innerHTML=goalsChart(played().slice(-12));
@@ -1197,7 +1402,7 @@ function openPlayer(id){
    <div>Alçada<b>${p.cm?p.cm+' cm':'–'}</b></div><div>Pes<b>${p.kg?p.kg+' kg':'–'}</b></div>
    <div>Naixement<b>${p.dob?esc(p.dob.toLocaleDateString('ca-ES',{day:'numeric',month:'long',year:'numeric'})):'–'}</b></div><div>Lloc<b>${esc(p.birth||'–')}</b></div></div>
    <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:700;margin-bottom:8px">Temporada a LaLiga</div>
-   <div class="sgrid">${cells.map(([k,v])=>`<div><b>${v??0}</b><small>${k}</small></div>`).join('')}</div>${p.profile?`<p style="margin-top:14px"><a class="btn" style="text-decoration:none;display:inline-block" href="${esc(p.profile)}" target="_blank" rel="noopener noreferrer">Fitxa oficial a fcbarcelona.com ↗</a></p>`:''}</div></div>`);
+   <div class="sgrid">${cells.map(([k,v])=>`<div><b>${v??0}</b><small>${k}</small></div>`).join('')}</div><p style="margin-top:14px"><button class="btn" style="cursor:pointer" onclick="openStatPlayerByName(${esc(JSON.stringify(p.name)).replace(/'/g,'&#39;')})">📊 Totes les estadístiques per temporada i competició</button></p>${p.profile?`<p style="margin-top:10px"><a class="btn" style="text-decoration:none;display:inline-block" href="${esc(p.profile)}" target="_blank" rel="noopener noreferrer">Fitxa oficial a fcbarcelona.com ↗</a></p>`:''}</div></div>`);
 }
 
 function vidBlock(m){
@@ -1243,6 +1448,7 @@ function show(v){
   $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);
   window.scrollTo({top:0});
+  if(v==='estadistiques')ensureStats();
 }
 $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b)show(b.dataset.v)});
 $('#mfilters').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if('m'in b.dataset)S.mf=b.dataset.m;if('ms'in b.dataset)S.mfs=b.dataset.ms;renderMatches()});
