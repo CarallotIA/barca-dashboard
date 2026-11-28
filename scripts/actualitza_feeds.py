@@ -185,17 +185,17 @@ def pstats():
 ITUNES = "{http://www.itunes.com/dtds/podcast-1.0.dtd}"
 PODS_FILE = DATA / "pods.json"
 PODS_MAX_AGE = 20 * 60
-PODS_SCHEMA = 4  # puja aquest número quan canvien els camps: invalida la memòria cau
+PODS_SCHEMA = 5  # puja aquest número quan canvien els camps: invalida la memòria cau
 # Programes de ràdio/podcast sobre el Barça (RSS públics). only = text que ha de portar el títol de l'episodi.
 PODS = [
     {"key": "sotana", "name": "La Sotana", "net": "Programa del Barça", "url": "https://anchor.fm/s/10e30d900/podcast/rss", "site": ""},
     {"key": "tercer", "name": "LaTdT · El tercer temps (post-partit)", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/3/4/podseccio6343.xml", "site": "https://www.ccma.cat/catradio/latdt/"},
     {"key": "queth", "name": "Què t'hi jugues! (programa complet)", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/que-t-hi-jugues/itunestfp", "site": "https://cadenaser.com/cat/programa/que-t-hi-jugues/", "only": "complet"},
-    {"key": "tudiras", "keep": 14, "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
+    {"key": "tudiras", "when": True, "keep": 14, "name": "Tu diràs", "net": "RAC1", "url": "https://api.audioteca.rac1.cat/rss/tu-diras/", "site": "https://www.rac1.cat/tu-diras/"},
     {"key": "reservat", "name": "Barça reservat", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/2/3/podprograma2032.xml", "site": "https://www.ccma.cat/catradio/barca-reservat/"},
     {"key": "mitjanit", "name": "El club de la mitjanit", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/8/1/podprograma1218.xml", "site": "https://www.ccma.cat/catradio/el-club-de-la-mitjanit/"},
     {"key": "elbar", "name": "El Bar", "net": "Cadena SER", "url": "https://fapi-top.prisasd.com/api/v2/feed-rss/playser/el-bar/itunestfp", "site": "https://cadenaser.com/programa/el-bar/"},
-    {"key": "totcosta", "keep": 14, "name": "Tot costa", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/4/3/podprograma1734.xml", "site": "https://www.ccma.cat/catradio/tot-costa/"},
+    {"key": "totcosta", "when": True, "keep": 14, "name": "Tot costa", "net": "Catalunya Ràdio", "url": "https://dinamics.3cat.cat/public/podcast/catradio/xml/4/3/podprograma1734.xml", "site": "https://www.ccma.cat/catradio/tot-costa/"},
 ]
 
 
@@ -370,7 +370,7 @@ def pods():
             if len(eps) >= p.get("keep", 4):
                 break
         if eps:
-            out.append({"key": p["key"], "name": p["name"], "net": p["net"], "rss": p["url"], "site": p["site"] or ch.findtext("link") or "",
+            out.append({"key": p["key"], "when": bool(p.get("when")), "name": p["name"], "net": p["net"], "rss": p["url"], "site": p["site"] or ch.findtext("link") or "",
                         "img": (img.get("href") if img is not None else "") or (ch.findtext("image/url") or ""), "eps": eps})
     if out:
         PODS_FILE.write_text(json.dumps({"v": PODS_SCHEMA, "generated": iso(datetime.now(timezone.utc)), "pods": out}, ensure_ascii=False), encoding="utf-8")

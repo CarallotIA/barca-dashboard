@@ -297,6 +297,7 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .dls{display:flex;gap:4px}
 .ep.ytl{display:grid;grid-template-columns:96px 1fr;gap:10px;text-decoration:none;color:inherit;align-items:center}
 .ep.ytl:hover b{color:var(--or)}
+.ytf{aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}.ytf iframe{width:100%;height:100%;border:0;display:block}
 .ytth{aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000;display:block}.ytth img{width:100%;height:100%;object-fit:cover;display:block}
 .ep .dl{min-width:28px;padding:0 5px;width:auto;height:28px;border-radius:8px;display:grid;place-items:center;text-decoration:none;color:var(--txt);background:var(--card2);border:1px solid var(--line);font-size:13px}
 .ep .dl:hover{background:rgba(255,255,255,.16)}
@@ -972,7 +973,13 @@ function groupEps(eps){
   return gs.sort((x,y)=>y.last-x.last);
 }
 const fmtHM=ms=>new Date(ms).toLocaleTimeString('ca-ES',{hour:'2-digit',minute:'2-digit',timeZone:TZ});
-const groupTitle=g=>g.parts.length<2?g.parts[0].title:`${new Date(g.start).toLocaleDateString('ca-ES',{weekday:'short',day:'numeric',month:'numeric',timeZone:TZ})} · ${fmtHM(g.start)}–${fmtHM(g.start+g.sec*1000)}`;
+const wdShort=ms=>new Date(ms).toLocaleDateString('ca-ES',{weekday:'short',timeZone:TZ});
+const dayKey=ms=>new Date(ms).toLocaleDateString('sv-SE',{timeZone:TZ});
+const groupTitle=(g,p)=>{
+  if(g.parts.length<2&&!(p&&p.when&&g.sec))return g.parts[0].title;
+  const s=g.start,e=g.start+g.sec*1000,d=new Date(s).toLocaleDateString('ca-ES',{weekday:'short',day:'numeric',month:'numeric',timeZone:TZ});
+  return dayKey(s)===dayKey(e)?`${d} · ${fmtHM(s)}–${fmtHM(e)}`:`${d} · ${fmtHM(s)} → ${wdShort(e)} ${fmtHM(e)}`;
+};
 const durTxt=sec=>{const mn=Math.round(sec/60),h=Math.floor(mn/60),m=mn%60;return h?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min`};
 const groupsFor=p=>p.kind==='yt'?[...p.eps].sort((x,y)=>new Date(y.date)-new Date(x.date)).map(e=>({parts:[e],start:+new Date(e.date),last:+new Date(e.date),sec:e.sec||0,id:e.yt||e.link})):groupEps(p.eps);
 const savedMatch=(rec,g)=>!!(rec&&rec.gid===g.id&&rec.parts&&rec.parts.length===g.parts.length);
@@ -1012,7 +1019,7 @@ async function autoDl(){
         parts.push({audio:e.audio,sec:e.sec||0,blob:new Blob(chunks,{type:'audio/mpeg'}),size:got});
       }
       // només es guarda l'última emissió de cada programa: aquest registre substitueix l'anterior
-      await idb.put({key:p.key,gid:g.id,name:p.name,net:p.net,title:groupTitle(g),date:g.parts[0].date,parts,size:parts.reduce((s,x)=>s+x.size,0)});
+      await idb.put({key:p.key,gid:g.id,name:p.name,net:p.net,title:groupTitle(g,p),date:g.parts[0].date,parts,size:parts.reduce((s,x)=>s+x.size,0)});
       try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(_){}
       S.dl=null;markSaved();renderOffBar();
     }
@@ -1036,7 +1043,7 @@ function mountPlayer(box,g,p,srcs,saved){
   let rate=(()=>{try{return +localStorage.getItem('fcbrate')||1}catch(_){return 1}})();
   const parts=g.parts,secs=parts.map(e=>e.sec||0),offs=[];let acc=0;secs.forEach(s=>{offs.push(acc);acc+=s});const total=acc;let idx=0;
   box.innerHTML=`<div class="pl-art">${imgOk(p.img)?`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`:'<span>🎧</span>'}</div>
-   <div class="pl-tt"><b>${esc(groupTitle(g))}</b><span>${esc(p.name)}${parts.length>1?` · <i id="plPart">part 1/${parts.length}</i>`:''}${saved?' · <i class="svd">✓ descarregat</i>':''}</span></div>
+   <div class="pl-tt"><b>${esc(groupTitle(g,p))}</b><span>${esc(p.name)}${parts.length>1?` · <i id="plPart">part 1/${parts.length}</i>`:''}${saved?' · <i class="svd">✓ descarregat</i>':''}</span></div>
    <input type="range" class="pl-rg" id="plRg" min="0" max="1000" value="0" step="1" aria-label="Progrés">
    <div class="pl-tm"><span id="plCur">0:00</span><span id="plRem">${total?'-'+fmtT(total):''}</span></div>
    <div class="pl-ct"><button class="pl-sm" id="plRate" title="Velocitat" aria-label="Velocitat">${rate}×</button>
@@ -1062,7 +1069,7 @@ function mountPlayer(box,g,p,srcs,saved){
   $('#plRate').onclick=e=>{rate=RATES[(RATES.indexOf(rate)+1)%RATES.length];a.playbackRate=rate;a.defaultPlaybackRate=rate;e.target.textContent=rate+'×';try{localStorage.setItem('fcbrate',rate)}catch(_){}upd()};
   let si=0;$('#plSleep').onclick=e=>{si=(si+1)%SLEEPS.length;clearTimeout(_sleepT);const m=SLEEPS[si];e.target.textContent=m?m+' min':'⏱';e.target.classList.toggle('on',!!m);if(m)_sleepT=setTimeout(()=>{a.pause();e.target.textContent='⏱';e.target.classList.remove('on');si=0},m*60e3)};
   if('mediaSession' in navigator){
-    try{navigator.mediaSession.metadata=new MediaMetadata({title:groupTitle(g),artist:p.name,album:p.net||'Podcast',artwork:imgOk(p.img)?[{src:new URL(p.img,location.href).href,sizes:'512x512'}]:[]});
+    try{navigator.mediaSession.metadata=new MediaMetadata({title:groupTitle(g,p),artist:p.name,album:p.net||'Podcast',artwork:imgOk(p.img)?[{src:new URL(p.img,location.href).href,sizes:'512x512'}]:[]});
       navigator.mediaSession.setActionHandler('play',()=>a.play());navigator.mediaSession.setActionHandler('pause',()=>a.pause());
       navigator.mediaSession.setActionHandler('seekbackward',()=>skip(-15));navigator.mediaSession.setActionHandler('seekforward',()=>skip(15));
       navigator.mediaSession.setActionHandler('seekto',d=>{if(d.seekTime!=null)seek(offs[idx]+d.seekTime)})}catch(_){}
@@ -1072,7 +1079,11 @@ function mountPlayer(box,g,p,srcs,saved){
 async function playPod(g,p){
   const box=$('#nowBody');if(!box)return;const now=$('#podNow'),first=g.parts[0];
   stopPlayer();
-  if(first.spot){
+  if(p.kind==='yt'){
+    now.classList.remove('pl','playing');
+    $('#podNow .ph2 b').textContent=first.title;$('#podNow .ph2 span').textContent=p.name+(p.net?' · '+p.net:'');
+    box.innerHTML=`<div class="ytf"><iframe title="${esc(first.title)}" src="https://www.youtube-nocookie.com/embed/${esc(first.yt)}?autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div><div class="nowhint"><a href="${esc(first.link)}" target="_blank" rel="noopener noreferrer" style="color:var(--or)">Obre a YouTube ↗</a></div>`;
+  }else if(first.spot){
     now.classList.remove('pl','playing');
     $('#podNow .ph2 b').textContent=first.title;$('#podNow .ph2 span').textContent=p.name+(p.net?' · '+p.net:'');
     box.innerHTML=`<iframe title="${esc(first.title)}" src="https://open.spotify.com/embed/episode/${esc(first.spot)}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="border-radius:12px;border:0"></iframe><div class="nowhint">Spotify: si no has iniciat sessió, només se sent una mostra de 30 s. (Aquí no hi ha els controls de ±15 s ni velocitat.)</div>`;
@@ -1098,10 +1109,14 @@ function renderPodsCore(){
   S.podsOrdered=PS;
   const dls=g=>g.parts.map((e,k)=>e.audio&&safeUrl(e.audio)?`<a class="dl" href="${esc(e.audio)}" target="_blank" rel="noopener noreferrer" download title="Descarrega${g.parts.length>1?' la part '+(k+1):''} per escoltar-la sense cobertura" aria-label="Descarrega">⬇${g.parts.length>1?k+1:''}</a>`:'').join('');
   el.innerHTML=NOWCARD+PS.map(p=>`<div class="pod"><div class="ph2">${imgOk(p.img)?`<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.removeAttribute('src')">`:'<img alt="">'}<div><b>${esc(p.name)}</b><span>${esc(p.net)}</span></div></div>
-   <div>${p.groups.map((g,i)=>p.kind==='yt'?`<a class="ep ytl" href="${esc(g.parts[0].link)}" target="_blank" rel="noopener noreferrer" title="Obre a YouTube"><span class="ytth"><img src="https://i.ytimg.com/vi/${esc(g.parts[0].yt)}/mqdefault.jpg" alt="" loading="lazy"></span><div><b>${esc(g.parts[0].title)}</b><small>${esc(ago(new Date(g.last)))} · ${esc(fmtDay(new Date(g.start)))}${g.sec?' · '+esc(durTxt(g.sec)):''} · YouTube ↗</small></div></a>`:`<div class="ep" data-k="${esc(p.key)}" data-i="${i}"><button class="pb" aria-label="Escolta" title="Escolta">▶</button><div><b>${esc(groupTitle(g))}</b><small>${esc(ago(new Date(g.last)))} · ${esc(fmtDay(new Date(g.start)))}${g.sec?' · '+esc(durTxt(g.sec)):''}${g.parts.length>1?' · '+g.parts.length+' parts':''}</small></div><span class="dls">${dls(g)}</span></div>`).join('')}</div>
+   <div>${p.groups.map((g,i)=>p.kind==='yt'?`<a class="ep ytl" data-k="${esc(p.key)}" data-i="${i}" href="${esc(g.parts[0].link)}" target="_blank" rel="noopener noreferrer" title="Obre a YouTube"><span class="ytth"><img src="https://i.ytimg.com/vi/${esc(g.parts[0].yt)}/mqdefault.jpg" alt="" loading="lazy"></span><div><b>${esc(g.parts[0].title)}</b><small>${esc(ago(new Date(g.last)))} · ${esc(fmtDay(new Date(g.start)))}${g.sec?' · '+esc(durTxt(g.sec)):''} · YouTube ↗</small></div></a>`:`<div class="ep" data-k="${esc(p.key)}" data-i="${i}"><button class="pb" aria-label="Escolta" title="Escolta">▶</button><div><b>${esc(groupTitle(g,p))}</b><small>${esc(ago(new Date(g.last)))} · ${esc(fmtDay(new Date(g.start)))}${g.sec?' · '+esc(durTxt(g.sec)):''}${g.parts.length>1?' · '+g.parts.length+' parts':''}</small></div><span class="dls">${dls(g)}</span></div>`).join('')}</div>
    <div class="pf"><a class="more" href="${esc(p.site)}" target="_blank" rel="noopener noreferrer">Tots els episodis ↗</a>${p.rss&&safeUrl(p.rss)?`<a class="more" href="${esc(p.rss)}" target="_blank" rel="noopener noreferrer" title="Afegeix aquesta adreça a la teva app de podcasts per descarregar-los sols">RSS ↗</a>`:''}</div></div>`).join('');
 }
 $('#podGrid').addEventListener('click',e=>{
+  const ya=e.target.closest('a.ytl');
+  if(ya&&!(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button)){   // vídeos de YouTube: es reprodueixen a «Ara sona» (amb clic al mig o Ctrl+clic s'obre a YouTube)
+    e.preventDefault();const p=(S.podsOrdered||[]).find(x=>x.key===ya.dataset.k),g=p&&p.groups[+ya.dataset.i];if(!g)return;
+    document.querySelectorAll('#podGrid .ep').forEach(r=>r.classList.remove('on'));ya.classList.add('on');playPod(g,p);return}
   const b=e.target.closest('.pb');if(!b)return;
   const row=b.closest('.ep'),p=(S.podsOrdered||[]).find(x=>x.key===row.dataset.k),g=p&&p.groups[+row.dataset.i];if(!g)return;
   document.querySelectorAll('#podGrid .ep').forEach(r=>r.classList.remove('on'));row.classList.add('on');
