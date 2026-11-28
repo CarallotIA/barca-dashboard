@@ -270,7 +270,24 @@ svg.chart text{fill:var(--mut);font-size:11px;font-family:inherit}
 .ep.on{background:rgba(255,255,255,.06);border-radius:10px}
 .pod.now{border-color:rgba(237,187,0,.35);background:linear-gradient(135deg,rgba(0,77,152,.35),rgba(165,0,68,.3))}
 .nowic{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--blau),var(--gran));display:grid;place-items:center;font-size:26px;flex:none}
-.pod.now audio{width:100%}
+.pod.now.pl .ph2{display:none}
+.pl-art{width:min(100%,250px);aspect-ratio:1;border-radius:18px;margin:2px auto 14px;overflow:hidden;background:linear-gradient(135deg,var(--blau),var(--gran));display:grid;place-items:center;font-size:56px;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+.pl-art img{width:100%;height:100%;object-fit:cover;display:block}
+.pl-tt b{display:block;font-size:17px;line-height:1.25}.pl-tt span{display:block;font-size:12px;color:rgba(255,255,255,.7);margin-top:4px}
+.pl-tt .svd{font-style:normal;color:var(--win);font-weight:700}
+.pl-rg{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;margin:16px 0 6px;background:linear-gradient(90deg,var(--or) var(--p,0%),rgba(255,255,255,.22) var(--p,0%));outline:none;cursor:pointer}
+.pl-rg::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(237,187,0,.45)}
+.pl-rg::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#fff}
+.pl-tm{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.7);font-variant-numeric:tabular-nums}
+.pl-ct{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:6px}
+.pl-ct button{border:0;color:#fff;cursor:pointer;font:inherit}
+.pl-pp{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--blau2),var(--gran2));display:grid;place-items:center;box-shadow:0 8px 22px rgba(165,0,68,.45)}
+.pl-pp svg{width:30px;height:30px;fill:#fff}
+.pl-ic{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.1);position:relative;display:grid;place-items:center}
+.pl-ic svg{width:30px;height:30px;fill:#fff}.pl-ic em{position:absolute;font-style:normal;font-size:9px;font-weight:800;top:50%;left:50%;transform:translate(-50%,-38%)}
+.pl-ic:hover,.pl-sm:hover{background:rgba(255,255,255,.2)}
+.pl-sm{min-width:46px;height:34px;padding:0 9px;border-radius:999px;background:rgba(255,255,255,.1);font-size:13px;font-weight:700}
+.pl-sm.on{background:var(--or);color:#1a1200}
 .nowhint{font-size:11px;color:var(--mut);margin-top:8px}
 .offbar{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 .sw{display:flex;gap:10px;align-items:center;cursor:pointer;flex:1 1 320px}.sw input{width:18px;height:18px;accent-color:var(--gran2);flex:none}
@@ -978,17 +995,58 @@ document.addEventListener('click',async e=>{if(e.target.id==='offClear'){if(conf
 window.addEventListener('online',()=>{autoDl();renderOffBar()});window.addEventListener('offline',renderOffBar);
 
 const NOWCARD='<div class="pod now" id="podNow"><div class="ph2"><div class="nowic">🎧</div><div><b>Ara sona</b><span>Tria un episodi i es reprodueix aquí</span></div></div><div id="nowBody"></div></div>';
+/* ---- Reproductor propi de l'«Ara sona» (caràtula, progrés, ±15 s, velocitat, temporitzador) ---- */
+const fmtT=s=>{s=Math.max(0,Math.floor(s||0));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=String(s%60).padStart(2,'0');return h?`${h}:${String(m).padStart(2,'0')}:${x}`:`${m}:${x}`};
+const RATES=[1,1.25,1.5,1.75,2,0.75];
+const SLEEPS=[0,15,30,60];
+let _au=null,_sleepT=null;
+function stopPlayer(){if(_au){try{_au.pause()}catch(_){}_au.removeAttribute('src');_au.load();_au=null}clearTimeout(_sleepT);_sleepT=null;if(S.nowUrl){URL.revokeObjectURL(S.nowUrl);S.nowUrl=null}}
+function mountPlayer(box,ep,p,src,saved){
+  const now=$('#podNow');now.classList.add('pl');
+  const rate0=(()=>{try{return +localStorage.getItem('fcbrate')||1}catch(_){return 1}})();
+  box.innerHTML=`<div class="pl-art">${p.img&&safeUrl(p.img)?`<img src="${esc(p.img)}" alt="" onerror="this.remove()">`:'<span>🎧</span>'}</div>
+   <div class="pl-tt"><b>${esc(ep.title)}</b><span>${esc(p.name)}${saved?' · <i class="svd">✓ descarregat</i>':''}</span></div>
+   <input type="range" class="pl-rg" id="plRg" min="0" max="1000" value="0" step="1" aria-label="Progrés">
+   <div class="pl-tm"><span id="plCur">0:00</span><span id="plRem">${ep.dur?'-'+esc(ep.dur):''}</span></div>
+   <div class="pl-ct"><button class="pl-sm" id="plRate" title="Velocitat" aria-label="Velocitat">${rate0}×</button>
+    <button class="pl-ic" id="plBack" aria-label="Enrere 15 segons" title="Enrere 15 s"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg><em>15</em></button>
+    <button class="pl-pp" id="plPP" aria-label="Reprodueix o pausa"><svg id="plPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg id="plPause" viewBox="0 0 24 24" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></button>
+    <button class="pl-ic" id="plFwd" aria-label="Endavant 15 segons" title="Endavant 15 s"><svg viewBox="0 0 24 24" style="transform:scaleX(-1)"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg><em>15</em></button>
+    <button class="pl-sm" id="plSleep" title="Temporitzador de son" aria-label="Temporitzador de son">⏱</button></div>`;
+  stopPlayer();
+  const a=new Audio();a.preload='auto';a.src=src;a.playbackRate=rate0;_au=a;
+  const rg=$('#plRg'),cur=$('#plCur'),rem=$('#plRem'),pl=$('#plPlay'),pa=$('#plPause');let drag=false;
+  const upd=()=>{const d=a.duration||0;if(!drag&&d)rg.value=Math.round(a.currentTime/d*1000);cur.textContent=fmtT(a.currentTime);if(d)rem.textContent='-'+fmtT((d-a.currentTime)/a.playbackRate);
+    rg.style.setProperty('--p',(rg.value/10)+'%')};
+  const ui=()=>{const on=!a.paused&&!a.ended;pl.style.display=on?'none':'';pa.style.display=on?'':'none';now.classList.toggle('playing',on);if('mediaSession' in navigator)navigator.mediaSession.playbackState=on?'playing':'paused'};
+  a.addEventListener('timeupdate',upd);a.addEventListener('loadedmetadata',upd);a.addEventListener('play',ui);a.addEventListener('pause',ui);a.addEventListener('ended',ui);
+  rg.addEventListener('input',()=>{drag=true;if(a.duration)cur.textContent=fmtT(rg.value/1000*a.duration);rg.style.setProperty('--p',(rg.value/10)+'%')});
+  rg.addEventListener('change',()=>{if(a.duration)a.currentTime=rg.value/1000*a.duration;drag=false;upd()});
+  const skip=s=>{a.currentTime=Math.min(Math.max(0,a.currentTime+s),a.duration||1e9)};
+  $('#plBack').onclick=()=>skip(-15);$('#plFwd').onclick=()=>skip(15);
+  $('#plPP').onclick=()=>{a.paused?a.play().catch(()=>{}):a.pause()};
+  $('#plRate').onclick=e=>{const i=(RATES.indexOf(a.playbackRate)+1)%RATES.length;a.playbackRate=RATES[i];e.target.textContent=RATES[i]+'×';try{localStorage.setItem('fcbrate',RATES[i])}catch(_){}upd()};
+  let si=0;$('#plSleep').onclick=e=>{si=(si+1)%SLEEPS.length;clearTimeout(_sleepT);const m=SLEEPS[si];e.target.textContent=m?m+' min':'⏱';e.target.classList.toggle('on',!!m);if(m)_sleepT=setTimeout(()=>{a.pause();e.target.textContent='⏱';e.target.classList.remove('on');si=0},m*60e3)};
+  if('mediaSession' in navigator){
+    try{navigator.mediaSession.metadata=new MediaMetadata({title:ep.title,artist:p.name,album:p.net||'Podcast',artwork:p.img&&safeUrl(p.img)?[{src:p.img,sizes:'512x512'}]:[]});
+      navigator.mediaSession.setActionHandler('play',()=>a.play());navigator.mediaSession.setActionHandler('pause',()=>a.pause());
+      navigator.mediaSession.setActionHandler('seekbackward',()=>skip(-15));navigator.mediaSession.setActionHandler('seekforward',()=>skip(15));
+      navigator.mediaSession.setActionHandler('seekto',d=>{if(d.seekTime!=null)a.currentTime=d.seekTime})}catch(_){}
+  }
+  a.play().catch(()=>{});ui();
+}
 async function playPod(ep,p){
-  const box=$('#nowBody');if(!box)return;
-  $('#podNow .ph2 b').textContent=ep.title;$('#podNow .ph2 span').textContent=p.name+(p.net?' · '+p.net:'');
+  const box=$('#nowBody');if(!box)return;const now=$('#podNow');
   if(ep.spot){
-    box.innerHTML=`<iframe title="${esc(ep.title)}" src="https://open.spotify.com/embed/episode/${esc(ep.spot)}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="border-radius:12px;border:0"></iframe><div class="nowhint">Spotify: si no has iniciat sessió, només se sent una mostra de 30 s.</div>`;
+    stopPlayer();now.classList.remove('pl','playing');
+    $('#podNow .ph2 b').textContent=ep.title;$('#podNow .ph2 span').textContent=p.name+(p.net?' · '+p.net:'');
+    box.innerHTML=`<iframe title="${esc(ep.title)}" src="https://open.spotify.com/embed/episode/${esc(ep.spot)}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" style="border-radius:12px;border:0"></iframe><div class="nowhint">Spotify: si no has iniciat sessió, només se sent una mostra de 30 s. (Aquí no hi ha els controls de ±15 s ni velocitat.)</div>`;
   }else{
     let src=safeUrl(ep.audio)?ep.audio:'',saved=false;
     try{const rec=await idb.get(p.key);if(rec&&rec.audio===ep.audio){if(S.nowUrl)URL.revokeObjectURL(S.nowUrl);S.nowUrl=URL.createObjectURL(rec.blob);src=S.nowUrl;saved=true}}catch(_){}
-    if(src)box.innerHTML=`<audio controls autoplay src="${esc(src)}"></audio>${saved?'<div class="nowhint">▶ Es reprodueix des del dispositiu (sense gastar dades).</div>':''}`;
+    if(src){const keep=S.nowUrl;mountPlayer(box,ep,p,src,saved);S.nowUrl=keep}
   }
-  $('#podNow').scrollIntoView({behavior:'smooth',block:'center'});
+  now.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function renderPods(){
   const el=$('#podGrid');if(!el)return;
