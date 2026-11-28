@@ -598,7 +598,7 @@ function loadFeedsJs(){
       try{
         let F;
         if(u.endsWith('.js')){F=await new Promise(res=>{const s=document.createElement('script');s.src=u+'?t='+Date.now();s.onload=()=>{s.remove();res(window.FEEDS)};s.onerror=()=>{s.remove();res(null)};document.head.appendChild(s)})}
-        else{const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store'});if(!r.ok)continue;F=JSON.parse((await r.text()).replace(/^\s*window\.FEEDS\s*=\s*/,'').replace(/;\s*$/,''))}
+        else{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),7000);let r;try{r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Math.floor(Date.now()/60e3),{cache:'no-store',signal:ac.signal})}finally{clearTimeout(to)}if(!r.ok)continue;F=JSON.parse((await r.text()).replace(/^\s*window\.FEEDS\s*=\s*/,'').replace(/;\s*$/,''))}
         if(F&&F.generated&&Date.now()-new Date(F.generated)<6*3600e3){try{localStorage.setItem('fcbfeeds',JSON.stringify(F))}catch(_){}return F}
       }catch(_){}
     }
@@ -1269,6 +1269,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now(
 
 const h=(location.hash||'').slice(1);if(['resum','partits','classificacio','plantilla','estadistiques','videos','podcasts','noticies'].includes(h))show(h);
 loadMatches();loadNews();loadVideos();
+/* Sense connexió o amb senyal dolent: els programes descarregats es mostren de seguida, sense esperar les dades */
+setTimeout(()=>{if(!S.pods)renderPods()},1500);
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'))navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
