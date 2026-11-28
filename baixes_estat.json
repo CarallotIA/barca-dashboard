@@ -7,9 +7,9 @@
   "fins": "2026-12-15T00:00:00+00:00"
  },
  "3": {
-  "data": "2026-11-26T17:03:47+00:00",
+  "data": "2026-11-27T22:13:29+00:00",
   "tipus": "out",
-  "motiu": "Balde, en el aire tras la goleada en Bakú, con Pedri al mando y Gerard López en foco",
+  "motiu": "Barcelona recuperó a Rodri Hernández, pero Hansi Flick mantiene la preocupación por las molestias de Marc Bern",
   "apps": 3,
   "fins": null
  },
@@ -21,9 +21,9 @@
   "fins": "2026-12-04T15:31:07+00:00"
  },
  "15": {
-  "data": "2026-11-26T11:42:06+00:00",
-  "tipus": "doubt",
-  "motiu": "Optimismo con Rodri y Christensen",
+  "data": "2026-11-27T22:13:29+00:00",
+  "tipus": "out",
+  "motiu": "Barcelona recuperó a Rodri Hernández, pero Hansi Flick mantiene la preocupación por las molestias de Marc Bern",
   "apps": 7,
   "fins": null
  },
@@ -32,6 +32,13 @@
   "tipus": "out",
   "motiu": "Flick baja a Gavi de las nubes: el jugador defiende su \"mentalidad única\", pero acepta su cambio de rol",
   "apps": 6,
+  "fins": null
+ },
+ "22": {
+  "data": "2026-11-27T22:13:29+00:00",
+  "tipus": "doubt",
+  "motiu": "Barcelona recuperó a Rodri Hernández, pero Hansi Flick mantiene la preocupación por las molestias de Marc Bern",
+  "apps": 11,
   "fins": null
  }
 }
